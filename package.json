@@ -1,0 +1,19 @@
+{
+  "author": "Jed Schmidt <tr@nslator.jp> (http://jed.is)",
+  "name": "crx",
+  "description": "Build Google Chrome extensions with node.js",
+  "version": "0.1.1",
+  "homepage": "https://github.com/jed/crx",
+  "bin": {
+    "crx": "./bin/crx.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jed/crx.git"
+  },
+  "engines": {
+    "node": "~0.4.12"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
