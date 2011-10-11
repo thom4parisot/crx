@@ -1,140 +1,76 @@
-crxmake
-=======
+crx
+===
 
-crxmake is a [node.js](http://nodejs.org/) module for packing and serving Google Chrome extensions.
+crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrome extensions.
 
 ## Requirements
 
 * [node.js](http://nodejs.org/), tested with 0.4.12
 * openssl
+* ssh-keygen
 * zip
 
 ## Install
 
-    $ npm install crxmake
+    $ npm install crx
 
 ## API
 
-### Constructor
-    
-#### crx = new ChromeExtension(options, [callback])
+### crx pack [directory] [-f file] [-p private-key]
 
-Returns a `ChromeExtension` instance. If an optional callback is provided, the `load` method is called.
+Pack the specified directory into a .crx package, and output it to stdout. If no directory is specified, the current working directory is used.
 
-### Methods
+Use the `-f` option to output to a file instead of stdout; if no file is specified, the package is given the same name as the directory basename.
 
-#### crx.load([callback])
+Use the `-p` option to specify an external private key. If this is not used, `key.pem` is used from within the directory. If this option is not used and no `key.pem` file exists, one will be generated automatically.
 
-Loads data for the instance. If the instance has a `package` key, the `loadFromPackage` method is called. If the instance has a `sourcePath` key, `loadFromSourcePath` is called.
+### crx keygen [directory]
 
-#### crx.loadFromPackage([callback])
+Generate a 1,024-bit RSA private key within the directory. This is called automatically if a key is not specified, and `key.pem` does not exist.
 
-Populates the instance based on the contents of the `package` buffer.
+## Examples
 
-#### crx.loadFromSourcePath([callback])
+Given the following directory structure:
 
-Populates the instance based on the directory at `sourcePath` and the `privateKey` buffer.
+    └─┬ myFirstExtension
+      ├── manifest.json
+      └── icon.png
 
-#### crx.generateAppId()
+run this:
 
-Uses a hash of the public key to generate the app ID used to uniquely identify the extension, and caches it in the `appID` property.
+    cd myFirstExtension
+    crx pack -f
 
-#### crx.generateUpdateXml()
+to generate this:
 
-Calculates the app ID and pulls the version and update URL from the manifest, and returns an XML file that can be served to enable autoupdates, as described [here](http://code.google.com/chrome/extensions/autoupdate.html#H2-2).
+    ├─┬ myFirstExtension
+    │ ├── manifest.json
+    │ ├── icon.png
+    │ └── key.pem
+    └── myFirstExtension.crx
 
-### Properties
+You can also name the output file like this:
 
-#### crx.package
+    cd myFirstExtension
+    crx pack -f myFirstExtension.crx
 
-A buffer containing the source of the extension, which can be served as the `.crx` file.
+to get the same results, or also pipe to the file manually like this.
 
-#### crx.publicKey
+    cd myFirstExtension
+    crx pack > ../myFirstExtension.crx
 
-The public key for the extension, which is generated from `privateKey` when the extension is built.
+As you can see a key is generated for you at `key.pem` if none exists. You can also specify an external key. So if you have this:
 
-#### crx.privateKey
+    ├─┬ myFirstExtension
+    │ ├── manifest.json
+    │ └── icon.png
+    └── myPrivateKey.pem
 
-The private key for the extension. This is used to generate the public key and sign the package.
+you can run this:
 
-#### crx.version
+    crx pack myFirstExtension -p myPrivateKey.pem -f
 
-The version of the extension. This is currently fixed at `2`.
-
-#### crx.signature
-
-A cryptographic signature used to verify that the private key was used to sign the package.
-
-#### crx.contents
-
-A zip file representing the extension's source tree.
-
-#### crx.manifest
-
-An object parsed from the extensions `manifest.json` file.
-
-## Example
-
-```javascript
-// from ./test/test.js
-
-var fs = require("fs")
-  , assert = require("assert")
-  , join = require("path").join
-  , http = require("http")
-
-  , ChromeExtension = require("../")
-
-  , extPath = join(__dirname, "myFirstExtension")
-  , crxPath = extPath + ".crx"
-  , key = fs.readFileSync(extPath + ".pem")
-
-// create an extension with the existing key
-new ChromeExtension({sourcePath: extPath, privateKey: key}, function(err, fromPath){
-  // make sure no error occurred and that something was returned
-  assert.ok(!err)
-  assert.ok(!!fromPath)
-
-  // make sure that the sizes and names are the same
-  assert.equal(fromPath.publicKey.length, 162)
-  assert.equal(fromPath.signature.length, 128)
-  assert.equal(fromPath.manifest.name, "My First Extension")
-
-  // use the created extension to create a new instance
-  new ChromeExtension({package: fromPath.package}, function(err, fromPackage) {
-    // make sure no error occurred and that something was returned
-    assert.ok(!err)
-    assert.ok(!!fromPackage)
-
-    // make sure that the public keys are the same
-    assert.equal(
-      fromPath.publicKey.toString(),
-      fromPackage.publicKey.toString()
-    )
-
-    // make sure that the signatures are the same
-    assert.equal(
-      fromPath.signature.toString(),
-      fromPackage.signature.toString()
-    )
-
-    // make sure that the contents are the same
-    assert.equal(
-      fromPath.contents.length,
-      fromPackage.contents.length
-    )
-
-    // write the extension to disk for further testing
-    fs.writeFile(crxPath, fromPath.package, function() {
-      console.log("Open the following extension for further testing:\n%s", crxPath)
-    })
-  })
-})
-```
-
-## TODO
-
-* Find out how to generate packages without keys and obtain a `.pem` file
+to sign your package without keeping the key in the directory.
 
 Copyright
 ---------
