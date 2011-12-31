@@ -172,14 +172,14 @@ module.exports = new function() {
   }
 
   this.generateUpdateXML = function() {
-    if (!this.updateUrl) throw new Error("No URL provided for update.xml.")
+    if (!this.codebase) throw new Error("No URL provided for update.xml.")
 
     return this.updateXML =
       Buffer(
         "<?xml version='1.0' encoding='UTF-8'?>\n" +
         "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
         "  <app appid='" + this.generateAppId() + "'>\n" +
-        "    <updatecheck codebase='" + this.updateUrl + "' version='" + this.manifest.version + "' />\n" +
+        "    <updatecheck codebase='" + this.codebase + "' version='" + this.manifest.version + "' />\n" +
         "  </app>\n" +
         "</gupdate>"
       )

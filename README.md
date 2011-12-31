@@ -31,7 +31,7 @@ Packs the Chrome Extension, and calls back with a Buffer containing the `.crx` f
 
 ### crx.generateUpdateXML()
 
-Returns a Buffer containing the update.xml file used for autoupdate, as specified for `update_url` in the manifest. In this case, the instance must have a property called `updateUrl`.
+Returns a Buffer containing the update.xml file used for autoupdate, as specified for `update_url` in the manifest. In this case, the instance must have a property called `codebase`.
 
 ### crx.destroy()
 
@@ -43,7 +43,7 @@ Destroys all of the temporary resources used for packing.
 var fs = require("fs")
   , ChromeExtension = require("crx")
   , crx = new ChromeExtension(
-      updateUrl: "http://localhost/update.xml"
+      codebase: "http://localhost:8000/myFirstExtension.crx"
       privateKey: fs.readFileSync(__dirname + "/key.pem")
     })
 

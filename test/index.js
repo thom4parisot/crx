@@ -4,7 +4,7 @@ var fs = require("fs")
   , crx = new ChromeExtension
 
 crx.privateKey = fs.readFileSync(__dirname + "/key.pem")
-crx.updateUrl = "http://localhost/update.xml"
+crx.codebase = "http://localhost:8000/myFirstExtension.crx"
 
 crx.load(__dirname + "/myFirstExtension", function(err) {
   if (err) throw err
