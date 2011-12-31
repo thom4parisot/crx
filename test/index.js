@@ -16,7 +16,7 @@ crx.load(__dirname + "/myFirstExtension", function(err) {
 
     fs.writeFile(__dirname + "/update.xml", updateXML)
     fs.writeFile(__dirname + "/myFirstExtension.crx", data)
-  
+
     this.destroy()
   })
 })

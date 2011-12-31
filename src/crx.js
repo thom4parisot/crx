@@ -8,7 +8,7 @@ var fs = require("fs")
 module.exports = new function() {
   function ChromeExtension(attrs, cb) {
     if (this instanceof ChromeExtension) {
-      for (var name in attrs) this[name] = attrs.name
+      for (var name in attrs) this[name] = attrs[name]
 
       this.path = join("/tmp", "crx-" + (Math.random() * 1e17).toString(36))
 
