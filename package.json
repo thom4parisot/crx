@@ -11,8 +11,12 @@
     "type": "git",
     "url": "git://github.com/jed/crx.git"
   },
+  "main": "./src/crx.js",
   "engines": {
     "node": ">=0.4.12"
+  },
+  "scripts": {
+    "test": "node ./test/index.js"
   },
   "dependencies": {
     "commander": ""

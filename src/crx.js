@@ -163,5 +163,19 @@ module.exports = new function() {
       })
   }
 
+  this.generateUpdateXML = function(url) {
+    if (!url) throw new Error("No URL provided for update.xml.")
+
+    return this.updateXML =
+      Buffer(
+        "<?xml version='1.0' encoding='UTF-8'?>\n" +
+        "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
+        "  <app appid='" + this.generateAppId() + "'>\n" +
+        "    <updatecheck codebase='" + url + "' version='" + this.manifest.version + "' />\n" +
+        "  </app>\n" +
+        "</gupdate>"
+      )
+  }
+
   return ChromeExtension
 }
