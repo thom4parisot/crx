@@ -17,9 +17,9 @@ crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrom
 ## Module API
 
 ### ChromeExtension = require("crx")
-### crx = new ChromeExtension
+### crx = new ChromeExtension(attrs)
 
-This module exports the `ChromeExtension` constructor directly, which takes no arguments.
+This module exports the `ChromeExtension` constructor directly, which can take an optional attribute object, which is used to extend the instance.
 
 ### crx.load(path, callback)
 
@@ -29,9 +29,9 @@ Loads the Chrome Extension from the specified path.
 
 Packs the Chrome Extension, and calls back with a Buffer containing the `.crx` file.
 
-### crx.generateUpdateXML(url)
+### crx.generateUpdateXML()
 
-Returns a Buffer containing the update.xml file used for autoupdate, as specified for `update_url` in the manifest.
+Returns a Buffer containing the update.xml file used for autoupdate, as specified for `update_url` in the manifest. In this case, the instance must have a property called `updateUrl`.
 
 ### crx.destroy()
 
@@ -42,10 +42,10 @@ Destroys all of the temporary resources used for packing.
 ```javascript
 var fs = require("fs")
   , ChromeExtension = require("crx")
-  , crx = new ChromeExtension
-  , updateUrl = "http://localhost/update.xml"
-
-crx.privateKey = fs.readFileSync(__dirname + "/key.pem")
+  , crx = new ChromeExtension(
+      updateUrl: "http://localhost/update.xml"
+      privateKey: fs.readFileSync(__dirname + "/key.pem")
+    })
 
 crx.load(__dirname + "/myFirstExtension", function(err) {
   if (err) throw err
@@ -53,7 +53,7 @@ crx.load(__dirname + "/myFirstExtension", function(err) {
   this.pack(function(err, data){
     if (err) throw err
 
-    var updateXML = this.generateUpdateXML(updateUrl)
+    var updateXML = this.generateUpdateXML()
 
     fs.writeFile(__dirname + "/update.xml", updateXML)
     fs.writeFile(__dirname + "/myFirstExtension.crx", data)

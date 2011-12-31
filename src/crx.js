@@ -6,7 +6,9 @@ var fs = require("fs")
   , exec = child.exec
 
 module.exports = new function() {
-  function ChromeExtension() {
+  function ChromeExtension(attrs) {
+    for (var name in attrs) this[name] = attrs.name
+
     this.path = join("/tmp", "crx-" + (Math.random() * 1e17).toString(36))
   }
 
@@ -169,15 +171,15 @@ module.exports = new function() {
       })
   }
 
-  this.generateUpdateXML = function(url) {
-    if (!url) throw new Error("No URL provided for update.xml.")
+  this.generateUpdateXML = function() {
+    if (!this.updateUrl) throw new Error("No URL provided for update.xml.")
 
     return this.updateXML =
       Buffer(
         "<?xml version='1.0' encoding='UTF-8'?>\n" +
         "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
         "  <app appid='" + this.generateAppId() + "'>\n" +
-        "    <updatecheck codebase='" + url + "' version='" + this.manifest.version + "' />\n" +
+        "    <updatecheck codebase='" + this.updateUrl + "' version='" + this.manifest.version + "' />\n" +
         "  </app>\n" +
         "</gupdate>"
       )
