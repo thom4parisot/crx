@@ -1,10 +1,10 @@
 var fs = require("fs")
   , assert = require("assert")
   , ChromeExtension = require("../")
-  , crx = new ChromeExtension
-
-crx.privateKey = fs.readFileSync(__dirname + "/key.pem")
-crx.codebase = "http://localhost:8000/myFirstExtension.crx"
+  , crx = new ChromeExtension({
+      privateKey: fs.readFileSync(__dirname + "/key.pem"),
+      codebase: "http://localhost:8000/myFirstExtension.crx"
+    })
 
 crx.load(__dirname + "/myFirstExtension", function(err) {
   if (err) throw err

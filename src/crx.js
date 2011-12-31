@@ -6,10 +6,18 @@ var fs = require("fs")
   , exec = child.exec
 
 module.exports = new function() {
-  function ChromeExtension(attrs) {
-    for (var name in attrs) this[name] = attrs.name
+  function ChromeExtension(attrs, cb) {
+    if (this instanceof ChromeExtension) {
+      for (var name in attrs) this[name] = attrs.name
 
-    this.path = join("/tmp", "crx-" + (Math.random() * 1e17).toString(36))
+      this.path = join("/tmp", "crx-" + (Math.random() * 1e17).toString(36))
+
+      cb && this.load(this.rootDirectory, function(err) {
+        err ? cb(err) : this.pack(cb)
+      })
+    }
+
+    else return new ChromeExtension(attrs, cb)
   }
 
   ChromeExtension.prototype = this
