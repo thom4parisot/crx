@@ -17,9 +17,15 @@ module.exports = new function() {
   }
 
   this.pack = function(cb) {
-    this.loadManifest(function() {
-      this.generatePublicKey(function() {
-        this.loadContents(function() {
+    this.loadManifest(function(err) {
+      if (err) return cb(err)
+
+      this.generatePublicKey(function(err) {
+        if (err) return cb(err)
+
+        this.loadContents(function(err) {
+          if (err) return cb(err)
+
           this.generateSignature()
           this.generatePackage()
 
