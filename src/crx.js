@@ -6,18 +6,14 @@ var fs = require("fs")
   , exec = child.exec
 
 module.exports = new function() {
-  function ChromeExtension(attrs, cb) {
+  function ChromeExtension(attrs) {
     if (this instanceof ChromeExtension) {
       for (var name in attrs) this[name] = attrs[name]
 
       this.path = join("/tmp", "crx-" + (Math.random() * 1e17).toString(36))
-
-      cb && this.load(this.rootDirectory, function(err) {
-        err ? cb(err) : this.pack(cb)
-      })
     }
 
-    else return new ChromeExtension(attrs, cb)
+    else return new ChromeExtension(attrs)
   }
 
   ChromeExtension.prototype = this
@@ -27,6 +23,10 @@ module.exports = new function() {
   }
 
   this.pack = function(cb) {
+    if (!this.loaded) return this.load(function(err) {
+      return err ? cb(err) : this.pack(cb)
+    })
+
     this.generatePublicKey(function(err) {
       if (err) return cb(err)
 
@@ -47,19 +47,12 @@ module.exports = new function() {
     })
   }
 
-  this.load = function(path, cb) {
-    fs.stat(path, function(err, stat) {
-      if (stat.isDirectory()) this.loadFromDir(path || this.rootDirectory, cb)
-
-      else if (stat.isFile()) this.loadFromFile(path, cb)
-    }.bind(this))
-  }
-
-  this.loadFromDir = function(path, cb) {
-    var child = spawn("cp", ["-R", path, this.path])
+  this.load = function(cb) {
+    var child = spawn("cp", ["-R", this.rootDirectory, this.path])
 
     child.on("exit", function() {
       this.manifest = require(join(this.path, "manifest.json"))
+      this.loaded = true
 
       cb.call(this)
     }.bind(this))
@@ -82,24 +75,6 @@ module.exports = new function() {
       if (err) return cb.call(this, err)
 
       cb.call(this)
-    }.bind(this))
-  }
-
-  this.loadFromFile = function(path, cb) {
-    fs.readFile(path, function(err, data) {
-      if (err) return cb.call(this, err)
-
-      path = this.path + ".zip"
-      data = data.slice(16 + crx[8] + crx[12])
-
-      fs.writeFile(path, data, function(err) {
-        if (err) return cb.call(this, err)
-
-        spawn("unzip", [path], {dir: this.path}, function() {
-          fs.unlink(path)
-          cb.call(this)          
-        })
-      }.bind(this))
     }.bind(this))
   }
 

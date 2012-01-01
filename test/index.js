@@ -3,20 +3,17 @@ var fs = require("fs")
   , ChromeExtension = require("../")
   , crx = new ChromeExtension({
       privateKey: fs.readFileSync(__dirname + "/key.pem"),
-      codebase: "http://localhost:8000/myFirstExtension.crx"
+      codebase: "http://localhost:8000/myFirstExtension.crx",
+      rootDirectory: __dirname + "/myFirstExtension"
     })
 
-crx.load(__dirname + "/myFirstExtension", function(err) {
+crx.pack(function(err, data){
   if (err) throw err
 
-  this.pack(function(err, data){
-    if (err) throw err
+  var updateXML = this.generateUpdateXML()
 
-    var updateXML = this.generateUpdateXML()
+  fs.writeFile(__dirname + "/update.xml", updateXML)
+  fs.writeFile(__dirname + "/myFirstExtension.crx", data)
 
-    fs.writeFile(__dirname + "/update.xml", updateXML)
-    fs.writeFile(__dirname + "/myFirstExtension.crx", data)
-
-    this.destroy()
-  })
+  this.destroy()
 })
