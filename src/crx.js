@@ -27,12 +27,14 @@ module.exports = new function() {
   }
 
   this.pack = function(cb) {
-    this.loadManifest(function(err) {
+    this.generatePublicKey(function(err) {
       if (err) return cb(err)
 
-      this.generatePublicKey(function(err) {
-        if (err) return cb(err)
+      var manifest = JSON.stringify(this.manifest)
 
+      this.writeFile("manifest.json", manifest, function(err) {
+        if (err) return cb(err)
+        
         this.loadContents(function(err) {
           if (err) return cb(err)
 
@@ -47,14 +49,20 @@ module.exports = new function() {
 
   this.load = function(path, cb) {
     fs.stat(path, function(err, stat) {
-      if (stat.isDirectory()) this.loadFromDir(path, cb)
+      if (stat.isDirectory()) this.loadFromDir(path || this.rootDirectory, cb)
 
       else if (stat.isFile()) this.loadFromFile(path, cb)
     }.bind(this))
   }
 
   this.loadFromDir = function(path, cb) {
-    spawn("cp", ["-R", path, this.path]).on("exit", cb.bind(this))
+    var child = spawn("cp", ["-R", path, this.path])
+
+    child.on("exit", function() {
+      this.manifest = require(join(this.path, "manifest.json"))
+
+      cb.call(this)
+    }.bind(this))
   }
 
   this.readFile = function(name, cb) {
@@ -93,19 +101,6 @@ module.exports = new function() {
         })
       }.bind(this))
     }.bind(this))
-  }
-
-  this.loadManifest = function(cb) {
-    this.readFile("manifest.json", function(err, data) {
-      if (!err) {
-        try { this.manifest = JSON.parse(data.toString()) }
-        catch (e) { err = e }
-      }
-
-      err
-        ? cb.call(this, err)
-        : cb.call(this, null, this.manifest)
-    })
   }
 
   this.generatePublicKey = function(cb) {
