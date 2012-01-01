@@ -1,6 +1,8 @@
 crx
 ===
 
+[![Build Status](https://secure.travis-ci.org/jed/crx.png)](http://travis-ci.org/jed/crx)
+
 crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrome extensions.
 
 ## Requirements
