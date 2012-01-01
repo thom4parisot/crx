@@ -1,5 +1,4 @@
 before_install: sudo apt-get install zip
 language: node_js
 node_js:
-  - 0.4
   - 0.6
