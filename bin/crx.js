@@ -15,7 +15,7 @@ var path = require("path")
   , cwd = process.cwd()
 
 program
-  .version("0.2.0")
+  .version("0.2.8")
   .option("-f, --file [file]", "input/output <file> instead of stdin/stdout")
   .option("-p, --private-key <file>", "relative path to private key [key.pem]")
   // coming soon
