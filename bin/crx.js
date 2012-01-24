@@ -72,6 +72,7 @@ function pack(dir) {
         : join(input, "key.pem")
 
     , crx = new ChromeExtension({
+      rootDirectory: input,
       maxBuffer: program.maxBuffer
     })
 
@@ -80,7 +81,7 @@ function pack(dir) {
 
     crx.privateKey = data
 
-    crx.load(input, function(err) {
+    crx.load(function(err) {
       if (err) throw err
 
       this.pack(function(err, data){
