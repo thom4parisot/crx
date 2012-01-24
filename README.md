@@ -75,6 +75,8 @@ Use the `-f` option to output to a file instead of stdout; if no file is specifi
 
 Use the `-p` option to specify an external private key. If this is not used, `key.pem` is used from within the directory. If this option is not used and no `key.pem` file exists, one will be generated automatically.
 
+Use the `-b` option to specify the maximum buffer allowed to generate extension. By default, will rely on `node` internal setting (~200KB).
+
 ### crx keygen [directory]
 
 Generate a 1,024-bit RSA private key within the directory. This is called automatically if a key is not specified, and `key.pem` does not exist.
