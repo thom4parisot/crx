@@ -45,11 +45,12 @@ Destroys all of the temporary resources used for packing.
 var fs = require("fs")
   , ChromeExtension = require("crx")
   , crx = new ChromeExtension(
-      codebase: "http://localhost:8000/myFirstExtension.crx"
-      privateKey: fs.readFileSync(__dirname + "/key.pem")
+      codebase: "http://localhost:8000/myFirstExtension.crx",
+      privateKey: fs.readFileSync(__dirname + "/key.pem"),
+      rootDirectory: __dirname + "/myFirstExtension"
     })
 
-crx.load(__dirname + "/myFirstExtension", function(err) {
+crx.load(function(err) {
   if (err) throw err
 
   this.pack(function(err, data){
