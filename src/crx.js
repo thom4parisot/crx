@@ -102,7 +102,7 @@ module.exports = new function() {
 
   this.loadContents = function(cb) {
     var command = "zip -qr -9 -X - . -x key.pem"
-      , options = {cwd: this.path, encoding: "binary"}
+      , options = {cwd: this.path, encoding: "binary", maxBuffer: this.maxBuffer}
 
     exec(command, options, function(err, data) {
       if (err) return cb.call(this, err)

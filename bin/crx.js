@@ -18,6 +18,7 @@ program
   .version("0.2.8")
   .option("-f, --file [file]", "input/output <file> instead of stdin/stdout")
   .option("-p, --private-key <file>", "relative path to private key [key.pem]")
+  .option("-b, --max-buffer <total>", "max amount of memory allowed to generate the crx, in byte")
   // coming soon
   // .option("-x, --xml", "output autoupdate xml instead of extension ")
 
@@ -70,14 +71,17 @@ function pack(dir) {
         ? resolve(cwd, program.privateKey)
         : join(input, "key.pem")
 
-    , crx = new ChromeExtension
+    , crx = new ChromeExtension({
+      rootDirectory: input,
+      maxBuffer: program.maxBuffer
+    })
 
   fs.readFile(key, function(err, data) {
     if (err) keygen(dir, pack.bind(null, dir))
 
     crx.privateKey = data
 
-    crx.load(input, function(err) {
+    crx.load(function(err) {
       if (err) throw err
 
       this.pack(function(err, data){
