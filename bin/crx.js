@@ -44,7 +44,7 @@ function keygen(dir, cb) {
 
   var key = join(dir, "key.pem")
 
-  path.exists(key, function(exists) {
+  fs.exists(key, function(exists) {
     if (exists) return cb && cb()
 
     var pubPath = key + ".pub"
