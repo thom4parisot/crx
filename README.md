@@ -3,7 +3,7 @@ crx
 
 [![Build Status](https://secure.travis-ci.org/jed/crx.png)](http://travis-ci.org/jed/crx)
 
-crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrome extensions.
+crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrome extensions. If you'd like to integrate it into your [grunt](http://gruntjs.com/) workflow, give [oncletom](https://github.com/oncletom)'s [grunt-crx](https://github.com/oncletom/grunt-crx) a spin.
 
 ## Requirements
 
