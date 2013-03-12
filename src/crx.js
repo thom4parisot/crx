@@ -82,8 +82,14 @@ module.exports = new function() {
     var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"])
 
     rsa.stdout.on("data", function(data) {
+      if(this.publicKey)
+        return
       this.publicKey = data
       cb && cb.call(this, null, this)
+    }.bind(this))
+    rsa.stderr.on("data", function(err) {
+      this.publicKey === undefined && cb && cb.call(this, "Failed to generate private key", null)
+      this.publicKey = new Error("Failed to generate private key")
     }.bind(this))
 
     rsa.stdin.end(this.privateKey)
