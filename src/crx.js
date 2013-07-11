@@ -79,14 +79,14 @@ module.exports = new function() {
   }
 
   this.generatePublicKey = function(cb) {
-    var fd_stdin = fs.openSync(this.privateKey, 'r')
-    var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"],
-      {stdio: [fd_stdin, null, null]})
+    var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"])
 
     rsa.stdout.on("data", function(data) {
       this.publicKey = data
       cb && cb.call(this, null, this)
     }.bind(this))
+
+    rsa.stdin.end(this.privateKey)
   }
 
   this.generateSignature = function() {
