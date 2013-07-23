@@ -1,5 +1,6 @@
 {
   "name": "My First Extension",
+  "manifest_version": 2,
   "version": "1.0",
   "description": "The first extension that I made.",
   "browser_action": {

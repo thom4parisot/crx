@@ -1,7 +1,9 @@
 var fs = require("fs")
   , join = require("path").join
+  , sep = require("path").sep
   , crypto = require("crypto")
   , child = require("child_process")
+  , ncp = require("ncp")
   , spawn = child.spawn
   , exec = child.exec
 
@@ -10,7 +12,7 @@ module.exports = new function() {
     if (this instanceof ChromeExtension) {
       for (var name in attrs) this[name] = attrs[name]
 
-      this.path = join("/tmp", "crx-" + (Math.random() * 1e17).toString(36))
+      this.path = join("tmp", "crx-" + (Math.random() * 1e17).toString(36))
     }
 
     else return new ChromeExtension(attrs)
@@ -48,9 +50,11 @@ module.exports = new function() {
   }
 
   this.load = function(cb) {
-    var child = spawn("cp", ["-R", this.rootDirectory, this.path])
-
-    child.on("exit", function() {
+    if (!fs.existsSync("tmp")) {
+      fs.mkdirSync("tmp")
+    }
+    ncp(this.rootDirectory, this.path, function(err) {
+      if (err) { throw err; }
       this.manifest = require(join(this.path, "manifest.json"))
       this.loaded = true
 

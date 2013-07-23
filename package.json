@@ -19,7 +19,8 @@
     "test": "node ./test/index.js"
   },
   "dependencies": {
-    "commander": ""
+    "commander": "",
+    "ncp": ""
   },
   "devDependencies": {}
 }

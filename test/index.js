@@ -1,10 +1,11 @@
 var fs = require("fs")
   , assert = require("assert")
   , ChromeExtension = require("../")
+  , join = require("path").join
   , crx = new ChromeExtension({
       privateKey: fs.readFileSync(__dirname + "/key.pem"),
       codebase: "http://localhost:8000/myFirstExtension.crx",
-      rootDirectory: __dirname + "/myFirstExtension"
+      rootDirectory: join(__dirname, "myFirstExtension")
     })
 
 crx.pack(function(err, data){
