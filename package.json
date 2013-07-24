@@ -20,7 +20,9 @@
   },
   "dependencies": {
     "commander": "",
-    "ncp": ""
+    "archiver": "0.4.x",
+    "wrench": "1.5.x",
+    "bufferstream": "0.5.x"
   },
   "devDependencies": {}
 }

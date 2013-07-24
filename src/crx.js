@@ -3,7 +3,9 @@ var fs = require("fs")
   , sep = require("path").sep
   , crypto = require("crypto")
   , child = require("child_process")
-  , ncp = require("ncp")
+  , wrench = require("wrench")
+  , archiver = require("archiver")
+  , BufferStream = require("bufferstream")
   , spawn = child.spawn
   , exec = child.exec
 
@@ -21,7 +23,7 @@ module.exports = new function() {
   ChromeExtension.prototype = this
 
   this.destroy = function() {
-    spawn("rm", ["-rf", this.path])
+    wrench.rmdirSyncRecursive(this.path)
   }
 
   this.pack = function(cb) {
@@ -53,9 +55,9 @@ module.exports = new function() {
     if (!fs.existsSync("tmp")) {
       fs.mkdirSync("tmp")
     }
-    ncp(this.rootDirectory, this.path, function(err) {
-      if (err) { throw err; }
-      this.manifest = require(join(this.path, "manifest.json"))
+    wrench.copyDirRecursive(this.rootDirectory, this.path, function(err) {
+      if (err) { throw err }
+      this.manifest = require(join(process.cwd(), this.path, "manifest.json"))
       this.loaded = true
 
       cb.call(this)
@@ -105,14 +107,29 @@ module.exports = new function() {
   }
 
   this.loadContents = function(cb) {
-    var command = "zip -qr -9 -X - . -x key.pem"
-      , options = {cwd: this.path, encoding: "binary", maxBuffer: this.maxBuffer}
+    var archive = archiver("zip")
+    this.contents = ""
 
-    exec(command, options, function(err, data) {
+    archive.on("error", function(err) {
+      throw err
+    })
+
+    zipStream = new BufferStream({ size: "flexible" })
+
+    archive.pipe(zipStream)
+    
+    files = wrench.readdirSyncRecursive(this.path)
+    
+    for (var i = 0; i < files.length; i++) {
+      current = files[i]
+      stat = fs.statSync(join(this.path, current))
+      if (stat.isFile() && current !== "key.pem") {
+        archive.append(fs.createReadStream(join(this.path, current)), { name: current })
+      }
+    }
+    archive.finalize(function(err, written) {
       if (err) return cb.call(this, err)
-
-      this.contents = new Buffer(data, "binary")
-
+      this.contents = zipStream.getBuffer()
       cb.call(this)
     }.bind(this))
   }
