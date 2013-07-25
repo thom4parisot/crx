@@ -44,8 +44,8 @@ function keygen(dir, cb) {
 
   var key = join(dir, "key.pem")
 
-  path.exists(key, function(exists) {
-    if (exists) return cb && cb()
+  fs.exists(key, function(exists) {
+    if (exists) return cb && typeof(cb) == "function" && cb()
 
     var pubPath = key + ".pub"
       , command = "ssh-keygen -N '' -b 1024 -t rsa -f key.pem"
@@ -55,7 +55,7 @@ function keygen(dir, cb) {
 
       // TODO: find a way to prevent .pub output
       fs.unlink(pubPath)
-      cb && cb()
+      cb && typeof(cb) == "function" && cb()
     })
   })
 }

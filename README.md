@@ -7,10 +7,9 @@ crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrom
 
 ## Requirements
 
-* [node.js](http://nodejs.org/), tested with 0.4.12
+* [node.js](http://nodejs.org/), tested with >= 0.7.12
 * openssl
 * ssh-keygen
-* zip
 
 ## Install
 
@@ -44,10 +43,11 @@ Destroys all of the temporary resources used for packing.
 ```javascript
 var fs = require("fs")
   , ChromeExtension = require("crx")
+  , join = require("path").join
   , crx = new ChromeExtension(
       codebase: "http://localhost:8000/myFirstExtension.crx",
-      privateKey: fs.readFileSync(__dirname + "/key.pem"),
-      rootDirectory: __dirname + "/myFirstExtension"
+      privateKey: fs.readFileSync(join(__dirname, "key.pem")),
+      rootDirectory: join(__dirname, "myFirstExtension")
     })
 
 crx.load(function(err) {
@@ -58,8 +58,8 @@ crx.load(function(err) {
 
     var updateXML = this.generateUpdateXML()
 
-    fs.writeFile(__dirname + "/update.xml", updateXML)
-    fs.writeFile(__dirname + "/myFirstExtension.crx", data)
+    fs.writeFile(join(__dirname, "update.xml"), updateXML)
+    fs.writeFile(join(__dirname, "myFirstExtension.crx"), data)
   
     this.destroy()
   })

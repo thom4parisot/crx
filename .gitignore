@@ -1,2 +1,3 @@
 test/*.crx
 test/*.xml
+node_modules
