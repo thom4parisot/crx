@@ -7,7 +7,7 @@ crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrom
 
 ## Requirements
 
-* [node.js](http://nodejs.org/), tested with 0.4.12
+* [node.js](http://nodejs.org/), tested with >= 0.7.12
 * openssl
 * ssh-keygen
 

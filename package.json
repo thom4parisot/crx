@@ -13,7 +13,7 @@
   },
   "main": "./src/crx.js",
   "engines": {
-    "node": "~0.6.0"
+    "node": ">=0.7.12"
   },
   "scripts": {
     "test": "node ./test/index.js"
