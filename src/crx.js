@@ -149,8 +149,8 @@ module.exports = new function() {
     crx.write("Cr24" + Array(13).join("\x00"), "binary")
 
     crx[4] = 2
-    crx[8] = keyLength
-    crx[12] = sigLength
+    crx.writeUInt32LE(keyLength, 8)
+    crx.writeUInt32LE(sigLength, 12)
 
     publicKey.copy(crx, 16)
     signature.copy(crx, 16 + keyLength)
