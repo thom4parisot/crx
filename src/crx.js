@@ -5,7 +5,6 @@ var fs = require("fs")
   , child = require("child_process")
   , wrench = require("wrench")
   , archiver = require("archiver")
-  , BufferStream = require("bufferstream")
   , spawn = child.spawn
   , exec = child.exec
 
@@ -110,14 +109,6 @@ module.exports = new function() {
     var archive = archiver("zip")
     this.contents = ""
 
-    archive.on("error", function(err) {
-      throw err
-    })
-
-    zipStream = new BufferStream({ size: "flexible" })
-
-    archive.pipe(zipStream)
-    
     files = wrench.readdirSyncRecursive(this.path)
     
     for (var i = 0; i < files.length; i++) {
@@ -127,11 +118,17 @@ module.exports = new function() {
         archive.append(fs.createReadStream(join(this.path, current)), { name: current })
       }
     }
-    archive.finalize(function(err, written) {
-      if (err) return cb.call(this, err)
-      this.contents = zipStream.getBuffer()
+
+    archive.finalize()
+
+    archive.on("finish",function() {
+      this.contents = archive.read()
       cb.call(this)
     }.bind(this))
+
+    archive.on("error", function(err) {
+      throw err
+    })
   }
   
   this.generatePackage = function() {
