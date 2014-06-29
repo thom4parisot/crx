@@ -1,5 +1,6 @@
 var fs = require("fs")
-  , join = require("path").join
+  , path = require("path")
+  , join = path.join
   , sep = require("path").sep
   , crypto = require("crypto")
   , child = require("child_process")
@@ -22,7 +23,7 @@ module.exports = new function() {
   ChromeExtension.prototype = this
 
   this.destroy = function() {
-    wrench.rmdirSyncRecursive(this.path)
+    wrench.rmdirSyncRecursive(path.dirname(this.path))
   }
 
   this.pack = function(cb) {
