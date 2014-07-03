@@ -121,9 +121,12 @@ module.exports = new function() {
     }
 
     archive.finalize()
+    
+    archive.on('readable', function() {
+      this.contents = !this.contents.length ? archive.read() : Buffer.concat([this.contents, archive.read()])
+    }.bind(this))
 
-    archive.on("finish",function() {
-      this.contents = archive.read()
+    archive.on('finish', function() {
       cb.call(this)
     }.bind(this))
 
