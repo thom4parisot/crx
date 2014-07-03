@@ -121,9 +121,16 @@ module.exports = new function() {
     }
 
     archive.finalize()
+    
+    // Relates to the issue: "Event 'finished' no longer valid #18"
+    // https://github.com/jed/crx/issues/18
+    // TODO: Buffer concat could be a problem when building a big extension.
+    //       So ideally only the 'finish' callback must be used.
+    archive.on('readable', function() {
+      this.contents = !this.contents.length ? archive.read() : Buffer.concat([this.contents, archive.read()])
+    }.bind(this))
 
-    archive.on("finish",function() {
-      this.contents = archive.read()
+    archive.on('finish', function() {
       cb.call(this)
     }.bind(this))
 
