@@ -3,6 +3,8 @@ crx
 
 [![Build Status](https://secure.travis-ci.org/jed/crx.png)](http://travis-ci.org/jed/crx)
 
+**As I don't use it very much anymore, I'm currently looking for someone to take over this library for me, please get in touch if you're interested.**
+
 crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrome extensions. If you'd like to integrate it into your [grunt](http://gruntjs.com/) workflow, give [oncletom](https://github.com/oncletom)'s [grunt-crx](https://github.com/oncletom/grunt-crx) a spin.
 
 ## Requirements
