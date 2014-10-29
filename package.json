@@ -13,7 +13,8 @@
   },
   "main": "./src/crx.js",
   "engines": {
-    "node": ">=0.7.12"
+    "node": ">=0.7.12",
+    "npm": ">=1.4.6"
   },
   "scripts": {
     "test": "node ./test/index.js"
@@ -22,6 +23,5 @@
     "commander": "^2.5.0",
     "archiver": "^0.8.0",
     "wrench": "^1.5.0"
-  },
-  "devDependencies": {}
+  }
 }
