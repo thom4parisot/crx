@@ -3,13 +3,13 @@
   "name": "crx",
   "description": "Build Google Chrome extensions with node.js",
   "version": "0.4.4",
-  "homepage": "https://github.com/jed/crx",
+  "homepage": "https://github.com/oncletom/crx",
   "bin": {
     "crx": "./bin/crx.js"
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/jed/crx.git"
+    "url": "git://github.com/oncletom/crx.git"
   },
   "main": "./src/crx.js",
   "engines": {
@@ -19,9 +19,9 @@
     "test": "node ./test/index.js"
   },
   "dependencies": {
-    "commander": "",
-    "archiver": "0.8.x",
-    "wrench": "1.5.x"
+    "commander": "^2.5.0",
+    "archiver": "^0.8.0",
+    "wrench": "^1.5.0"
   },
   "devDependencies": {}
 }
