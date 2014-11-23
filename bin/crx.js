@@ -2,7 +2,7 @@
 
 var path = require("path");
 var fs = require("fs");
-var child = require("child_process");
+var rsa = require('node-rsa');
 
 var program = require("commander");
 var ChromeExtension = require("..");
@@ -10,7 +10,6 @@ var pkg = require('../package.json');
 
 var resolve = path.resolve;
 var join = path.join;
-var exec = child.exec;
 
 var cwd = process.cwd();
 
@@ -42,23 +41,19 @@ program.parse(process.argv);
 function keygen(dir, cb) {
   dir = resolve(cwd, dir);
 
-  var key = join(dir, "key.pem");
+  var keyPath = join(dir, "key.pem");
 
-  fs.exists(key, function(exists) {
+  fs.exists(keyPath, function(exists) {
     if (exists) {
       return cb && typeof(cb) == "function" && cb();
     }
 
-    var pubPath = key + ".pub";
-    var command = "ssh-keygen -N '' -b 1024 -t rsa -f key.pem";
+    var key = new rsa({ b: 1024 });
 
-    exec(command, {cwd: dir}, function(err) {
+    fs.writeFile(keyPath, key.getPrivatePEM(), function(err){
       if (err){
         throw err;
       }
-
-      // TODO: find a way to prevent .pub output
-      fs.unlink(pubPath);
 
       cb && typeof(cb) == "function" && cb();
     })
