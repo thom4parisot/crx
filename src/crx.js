@@ -1,13 +1,13 @@
-var fs = require("fs")
-  , path = require("path")
-  , join = path.join
-  , sep = require("path").sep
-  , crypto = require("crypto")
-  , child = require("child_process")
-  , wrench = require("wrench")
-  , archiver = require("archiver")
-  , spawn = child.spawn
-  , exec = child.exec
+'use strict';
+
+var fs = require("fs");
+var path = require("path");
+var join = path.join;
+var crypto = require("crypto");
+var child = require("child_process");
+var wrench = require("wrench");
+var archiver = require("archiver");
+var spawn = child.spawn;
 
 module.exports = new function() {
   function ChromeExtension(attrs) {
@@ -20,40 +20,40 @@ module.exports = new function() {
     else return new ChromeExtension(attrs)
   }
 
-  ChromeExtension.prototype = this
+  ChromeExtension.prototype = this;
 
   this.destroy = function() {
     wrench.rmdirSyncRecursive(path.dirname(this.path))
-  }
+  };
 
   this.pack = function(cb) {
     if (!this.loaded) return this.load(function(err) {
       return err ? cb(err) : this.pack(cb)
-    })
+    });
 
     this.generatePublicKey(function(err) {
-      if (err) return cb(err)
+      if (err) return cb(err);
 
-      var manifest = JSON.stringify(this.manifest)
+      var manifest = JSON.stringify(this.manifest);
 
       this.writeFile("manifest.json", manifest, function(err) {
-        if (err) return cb(err)
-        
-        this.loadContents(function(err) {
-          if (err) return cb(err)
+        if (err) return cb(err);
 
-          this.generateSignature()
-          this.generatePackage()
+        this.loadContents(function(err) {
+          if (err) return cb(err);
+
+          this.generateSignature();
+          this.generatePackage();
 
           cb.call(this, null, this.package)
         })
       })
     })
-  }
+  };
 
   this.load = function(cb) {
     if (!fs.existsSync("tmp")) {
-      fs.mkdirSync("tmp")
+      fs.mkdirSync("tmp");
     }
     wrench.copyDirRecursive(this.rootDirectory, this.path, function(err) {
       if (err) { throw err }
@@ -62,7 +62,7 @@ module.exports = new function() {
 
       cb.call(this)
     }.bind(this))
-  }
+  };
 
   this.readFile = function(name, cb) {
     var path = join(this.path, name)
@@ -71,29 +71,29 @@ module.exports = new function() {
       if (err) return cb.call(this, err)
 
       cb.call(this, null, this[name] = data)
-    }.bind(this))
-  }
+    }.bind(this));
+  };
 
   this.writeFile = function(path, data, cb) {
-    path = join(this.path, path)
+    path = join(this.path, path);
 
     fs.writeFile(path, data, function(err, data) {
-      if (err) return cb.call(this, err)
+      if (err) return cb.call(this, err);
 
       cb.call(this)
-    }.bind(this))
-  }
+    }.bind(this));
+  };
 
   this.generatePublicKey = function(cb) {
     var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"])
 
     rsa.stdout.on("data", function(data) {
-      this.publicKey = data
+      this.publicKey = data;
       cb && cb.call(this, null, this)
-    }.bind(this))
+    }.bind(this));
 
     rsa.stdin.end(this.privateKey)
-  }
+  };
 
   this.generateSignature = function() {
     return this.signature = new Buffer(
@@ -104,65 +104,66 @@ module.exports = new function() {
 
       "binary"
     )
-  }
+  };
 
   this.loadContents = function(cb) {
-    var archive = archiver("zip")
-    this.contents = ""
+    var archive = archiver("zip");
+    this.contents = "";
 
-    files = wrench.readdirSyncRecursive(this.path)
-    
-    for (var i = 0; i < files.length; i++) {
-      current = files[i]
-      stat = fs.statSync(join(this.path, current))
+
+    var files = wrench.readdirSyncRecursive(this.path);
+
+    files.forEach(function(current){
+      var stat = fs.statSync(join(this.path, current));
+
       if (stat.isFile() && current !== "key.pem") {
         archive.append(fs.createReadStream(join(this.path, current)), { name: current })
       }
-    }
+    }, this);
 
-    archive.finalize()
-    
+    archive.finalize();
+
     // Relates to the issue: "Event 'finished' no longer valid #18"
     // https://github.com/jed/crx/issues/18
     // TODO: Buffer concat could be a problem when building a big extension.
     //       So ideally only the 'finish' callback must be used.
     archive.on('readable', function() {
-      this.contents = !this.contents.length ? archive.read() : Buffer.concat([this.contents, archive.read()])
-    }.bind(this))
+      this.contents = !this.contents.length ? archive.read() : Buffer.concat([this.contents, archive.read()]);
+    }.bind(this));
 
     archive.on('finish', function() {
-      cb.call(this)
-    }.bind(this))
+      cb.call(this);
+    }.bind(this));
 
     archive.on("error", function(err) {
-      throw err
-    })
-  }
-  
+      throw err;
+    });
+  };
+
   this.generatePackage = function() {
-    var signature = this.signature
-      , publicKey = this.publicKey
-      , contents  = this.contents
+    var signature = this.signature;
+    var publicKey = this.publicKey;
+    var contents  = this.contents;
 
-      , keyLength = publicKey.length
-      , sigLength = signature.length
-      , zipLength = contents.length
-      , length = 16 + keyLength + sigLength + zipLength
+    var keyLength = publicKey.length;
+    var sigLength = signature.length;
+    var zipLength = contents.length;
+    var length = 16 + keyLength + sigLength + zipLength;
 
-      , crx = new Buffer(length)
+    var crx = new Buffer(length);
 
-    crx.write("Cr24" + Array(13).join("\x00"), "binary")
+    crx.write("Cr24" + Array(13).join("\x00"), "binary");
 
-    crx[4] = 2
-    crx.writeUInt32LE(keyLength, 8)
-    crx.writeUInt32LE(sigLength, 12)
+    crx[4] = 2;
+    crx.writeUInt32LE(keyLength, 8);
+    crx.writeUInt32LE(sigLength, 12);
 
-    publicKey.copy(crx, 16)
-    signature.copy(crx, 16 + keyLength)
-    contents.copy(crx, 16 + keyLength + sigLength)
+    publicKey.copy(crx, 16);
+    signature.copy(crx, 16 + keyLength);
+    contents.copy(crx, 16 + keyLength + sigLength);
 
     return this.package = crx
-  }
+  };
 
   this.generateAppId = function() {
     return this.appId = crypto
@@ -171,12 +172,12 @@ module.exports = new function() {
       .digest("hex")
       .slice(0, 32)
       .replace(/./g, function(x) {
-        return (parseInt(x, 16) + 10).toString(26)
-      })
-  }
+        return (parseInt(x, 16) + 10).toString(26);
+      });
+  };
 
   this.generateUpdateXML = function() {
-    if (!this.codebase) throw new Error("No URL provided for update.xml.")
+    if (!this.codebase) throw new Error("No URL provided for update.xml.");
 
     return this.updateXML =
       Buffer(
@@ -186,8 +187,8 @@ module.exports = new function() {
         "    <updatecheck codebase='" + this.codebase + "' version='" + this.manifest.version + "' />\n" +
         "  </app>\n" +
         "</gupdate>"
-      )
-  }
+      );
+  };
 
-  return ChromeExtension
-}
+  return ChromeExtension;
+};
