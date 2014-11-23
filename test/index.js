@@ -1,5 +1,5 @@
 var fs = require("fs");
-var assert = require("assert");
+var test = require("tape");
 var ChromeExtension = require("../");
 var join = require("path").join;
 var crx = new ChromeExtension({
@@ -8,15 +8,25 @@ var crx = new ChromeExtension({
   rootDirectory: join(__dirname, "myFirstExtension")
 });
 
-crx.pack(function(err, data){
-  if (err) {
-    throw err;
-  }
+test('it should pack the test extension', function(t){
+  t.plan(3);
 
-  var updateXML = this.generateUpdateXML();
+  crx.pack(function(err, data){
+    if (err) {
+      throw err;
+    }
 
-  fs.writeFile(join(__dirname, "update.xml"), updateXML);
-  fs.writeFile(join(__dirname, "myFirstExtension.crx"), data);
+    t.ok(data instanceof Buffer);
 
-  this.destroy();
+    var updateXML = this.generateUpdateXML();
+
+    t.ok(updateXML instanceof Buffer);
+
+    fs.writeFile(join(__dirname, "update.xml"), updateXML);
+    fs.writeFile(join(__dirname, "myFirstExtension.crx"), data);
+
+    this.destroy().then(function(err) {
+      t.equal(err, undefined);
+    });
+  });
 });

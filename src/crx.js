@@ -7,6 +7,8 @@ var crypto = require("crypto");
 var spawn = require("child_process").spawn;
 var wrench = require("wrench");
 var archiver = require("archiver");
+var rm = require('rimraf');
+var Promise = require('es6-promise').Promise;
 
 function ChromeExtension(attrs) {
   if ((this instanceof ChromeExtension) !== true) {
@@ -46,8 +48,23 @@ function ChromeExtension(attrs) {
 
 ChromeExtension.prototype = {
 
+  /**
+   * Destroys generated files.
+   *
+   * @returns {Promise}
+   */
   destroy: function () {
-    wrench.rmdirSyncRecursive(path.dirname(this.path))
+    var path = this.path;
+
+    return new Promise(function(resolve, reject){
+      rm(path, function(err){
+        if (err){
+          return reject(err);
+        }
+
+        resolve();
+      });
+    });
   },
 
   pack: function (cb) {
@@ -79,6 +96,7 @@ ChromeExtension.prototype = {
     if (!fs.existsSync("tmp")) {
       fs.mkdirSync("tmp");
     }
+
     wrench.copyDirRecursive(this.rootDirectory, this.path, function (err) {
       if (err) {
         throw err
