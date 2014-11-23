@@ -24,8 +24,6 @@ function ChromeExtension(attrs) {
 
   this.loaded = false;
 
-  this.package = null;
-
   this.rootDirectory = '';
 
   this.publicKey = null;
@@ -86,9 +84,8 @@ ChromeExtension.prototype = {
           if (err) return cb(err);
 
           this.generateSignature();
-          this.generatePackage();
 
-          cb.call(this, null, this.package)
+          cb.call(this, null, this.generatePackage())
         })
       })
     })
@@ -185,6 +182,14 @@ ChromeExtension.prototype = {
     });
   },
 
+  /**
+   * Generates and returns a signed package from extension content.
+   *
+   * BC BREAK `this.package` is not stored anymore (since 1.0.0)
+   *
+   * @param {Buffer} signature
+   * @returns {Buffer}
+   */
   generatePackage: function () {
     var signature = this.signature;
     var publicKey = this.publicKey;
@@ -207,7 +212,7 @@ ChromeExtension.prototype = {
     signature.copy(crx, 16 + keyLength);
     contents.copy(crx, 16 + keyLength + sigLength);
 
-    return this.package = crx
+    return crx;
   },
 
   /**
