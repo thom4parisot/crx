@@ -68,9 +68,9 @@ ChromeExtension.prototype = {
   },
 
   pack: function (cb) {
-    if (!this.loaded) return this.load(function (err) {
-      return err ? cb(err) : this.pack(cb)
-    });
+    if (!this.loaded) {
+      return this.load().then(this.pack.bind(this, cb));
+    }
 
     this.generatePublicKey(function (err) {
       if (err) return cb(err);
@@ -92,20 +92,30 @@ ChromeExtension.prototype = {
     })
   },
 
-  load: function (cb) {
+  /**
+   * Loads extension manifest and copies its content to a workable path.
+   *
+   * @returns {Promise}
+   */
+  load: function () {
     if (!fs.existsSync("tmp")) {
       fs.mkdirSync("tmp");
     }
 
-    wrench.copyDirRecursive(this.rootDirectory, this.path, function (err) {
-      if (err) {
-        throw err
-      }
-      this.manifest = require(join(process.cwd(), this.path, "manifest.json"));
-      this.loaded = true;
+    var selfie = this;
 
-      cb.call(this);
-    }.bind(this));
+    return new Promise(function(resolve, reject){
+      wrench.copyDirRecursive(selfie.rootDirectory, selfie.path, function (err) {
+        if (err) {
+          return reject(err);
+        }
+
+        selfie.manifest = require(join(process.cwd(), selfie.path, "manifest.json"));
+        selfie.loaded = true;
+
+        resolve(selfie);
+      });
+    });
   },
 
   readFile: function (name, cb) {
