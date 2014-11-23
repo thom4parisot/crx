@@ -97,9 +97,10 @@ ChromeExtension.prototype = {
   /**
    * Loads extension manifest and copies its content to a workable path.
    *
+   * @param {string=} path
    * @returns {Promise}
    */
-  load: function () {
+  load: function (path) {
     if (!fs.existsSync("tmp")) {
       fs.mkdirSync("tmp");
     }
@@ -107,7 +108,7 @@ ChromeExtension.prototype = {
     var selfie = this;
 
     return new Promise(function(resolve, reject){
-      wrench.copyDirRecursive(selfie.rootDirectory, selfie.path, function (err) {
+      wrench.copyDirRecursive(path || selfie.rootDirectory, selfie.path, function (err) {
         if (err) {
           return reject(err);
         }

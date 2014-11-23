@@ -14,53 +14,85 @@ crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrom
 
 ## Module API
 
+Asynchronous functions returns an [ES6 Promise](https://github.com/jakearchibald/es6-promise).
+
 ### ChromeExtension = require("crx")
 ### crx = new ChromeExtension(attrs)
 
 This module exports the `ChromeExtension` constructor directly, which can take an optional attribute object, which is used to extend the instance.
 
-### crx.load(path, callback)
+### crx.load(path)
 
-Loads the Chrome Extension from the specified path.
+Asynchronously loads the Chrome Extension from the specified path (or uses the `attr.rootDirectory` value).
 
-### crx.pack(callback)
+```js
+crx.load().then(function(crx){
+  // ...
+});
+```
 
-Packs the Chrome Extension, and calls back with a Buffer containing the `.crx` file.
+### crx.pack()
+
+Packs the Chrome Extension and resolves the promise with a Buffer containing the `.crx` file.
+
+```js
+crx.pack().then(function(crxBuffer){
+  fs.writeFile('/tmp/foobar.crx', crxBuffer);
+});
+```
 
 ### crx.generateUpdateXML()
 
-Returns a Buffer containing the update.xml file used for autoupdate, as specified for `update_url` in the manifest. In this case, the instance must have a property called `codebase`.
+Returns a Buffer containing the update.xml file used for `autoupdate`, as specified for `update_url` in the manifest. In this case, the instance must have a property called `codebase`.
+
+```js
+var crx = new ChromeExtension({ ..., codebase: 'https://autoupdateserver.com/myFirstExtension.crx' });
+
+crx.pack().then(function(crxBuffer){
+  // ...
+
+  var xmlBuffer = crx.generateUpdateXML();
+  fs.writeFile('/foo/bar/update.xml', xmlBuffer);
+});
+
+```
 
 ### crx.destroy()
 
 Destroys all of the temporary resources used for packing.
 
+```js
+crx.pack().then(function(crxBuffer){
+  // ...
+
+  return crx.destroy();
+}).then(function(){
+  console.log('Extension saved and workspace cleaned up!');
+});
+```
+
 ## Module example
 
 ```javascript
-var fs = require("fs")
-  , ChromeExtension = require("crx")
-  , join = require("path").join
-  , crx = new ChromeExtension(
-      codebase: "http://localhost:8000/myFirstExtension.crx",
-      privateKey: fs.readFileSync(join(__dirname, "key.pem")),
-      rootDirectory: join(__dirname, "myFirstExtension")
+var fs = require("fs"),
+var ChromeExtension = require("crx"),
+var join = require("path").join,
+var crx = new ChromeExtension(
+  codebase: "http://localhost:8000/myFirstExtension.crx",
+  privateKey: fs.readFileSync(join(__dirname, "key.pem"))
+});
+
+crx.load(join(__dirname, "myFirstExtension"))
+  .then(function() {
+    return crx.pack(function(crxBuffer){
+      var updateXML = crx.generateUpdateXML()
+
+      fs.writeFile(join(__dirname, "update.xml"), updateXML)
+      fs.writeFile(join(__dirname, "myFirstExtension.crx"), crxBuffer)
+
+      return crx.destroy();
     })
-
-crx.load(function(err) {
-  if (err) throw err
-
-  this.pack(function(err, data){
-    if (err) throw err
-
-    var updateXML = this.generateUpdateXML()
-
-    fs.writeFile(join(__dirname, "update.xml"), updateXML)
-    fs.writeFile(join(__dirname, "myFirstExtension.crx"), data)
-  
-    this.destroy()
   })
-})
 ```
 
 ## CLI API
@@ -130,6 +162,24 @@ to sign your package without keeping the key in the directory.
 Copyright
 ---------
 
-Copyright (c) 2014 Jed Schmidt. See [LICENSE.txt](LICENSE.txt) for details.
+    Copyright (c) 2014 Jed Schmidt, Thomas Parisot
 
-Send any questions or comments [here](http://twitter.com/jedschmidt).
+    Permission is hereby granted, free of charge, to any person obtaining
+    a copy of this software and associated documentation files (the
+    "Software"), to deal in the Software without restriction, including
+    without limitation the rights to use, copy, modify, merge, publish,
+    distribute, sublicense, and/or sell copies of the Software, and to
+    permit persons to whom the Software is furnished to do so, subject to
+    the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
