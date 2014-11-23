@@ -30,8 +30,6 @@ function ChromeExtension(attrs) {
 
   this.privateKey = null;
 
-  this.signature = null;
-
   this.contents = null;
 
   this.codebase = null;
@@ -83,9 +81,9 @@ ChromeExtension.prototype = {
         this.loadContents(function (err) {
           if (err) return cb(err);
 
-          this.generateSignature();
+          var signature = this.generateSignature();
 
-          cb.call(this, null, this.generatePackage())
+          cb.call(this, null, this.generatePackage(signature))
         })
       })
     })
@@ -138,13 +136,19 @@ ChromeExtension.prototype = {
     rsa.stdin.end(this.privateKey)
   },
 
+  /**
+   * Generates a SHA1 package signature.
+   *
+   * BC BREAK `this.signature` is not stored anymore (since 1.0.0)
+   *
+   * @returns {Buffer}
+   */
   generateSignature: function () {
-    return this.signature = new Buffer(
+    return new Buffer(
       crypto
         .createSign("sha1")
         .update(this.contents)
         .sign(this.privateKey),
-
       "binary"
     )
   },
@@ -190,8 +194,7 @@ ChromeExtension.prototype = {
    * @param {Buffer} signature
    * @returns {Buffer}
    */
-  generatePackage: function () {
-    var signature = this.signature;
+  generatePackage: function (signature) {
     var publicKey = this.publicKey;
     var contents = this.contents;
 
