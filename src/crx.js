@@ -83,27 +83,20 @@ ChromeExtension.prototype = {
 
     var selfie = this;
 
-    return this.generatePublicKey()
+    return selfie.writeFile("manifest.json", JSON.stringify(selfie.manifest))
+      .then(this.generatePublicKey.bind(this))
       .then(function(publicKey){
         selfie.publicKey = publicKey;
 
         return new Promise(function(resolve, reject){
-          var manifest = JSON.stringify(selfie.manifest);
-
-          selfie.writeFile("manifest.json", manifest, function (err) {
-            if (err) {
+          selfie.loadContents(function (err) {
+            if (err){
               return reject(err);
             }
 
-            selfie.loadContents(function (err) {
-              if (err){
-                return reject(err);
-              }
+            var signature = selfie.generateSignature();
 
-              var signature = selfie.generateSignature();
-
-              resolve(selfie.generatePackage(signature));
-            })
+            resolve(selfie.generatePackage(signature, publicKey));
           })
         });
       });
@@ -135,14 +128,25 @@ ChromeExtension.prototype = {
     });
   },
 
-  writeFile: function (path, data, cb) {
-    path = join(this.path, path);
+  /**
+   * Writes data into the extension workable directory.
+   *
+   * @param {string} path
+   * @param {*} data
+   * @returns {Promise}
+   */
+  writeFile: function (path, data) {
+    var absPath = join(this.path, path);
 
-    fs.writeFile(path, data, function (err, data) {
-      if (err) return cb.call(this, err);
+    return new Promise(function(resolve, reject){
+      fs.writeFile(absPath, data, function (err) {
+        if (err) {
+          return reject(err);
+        }
 
-      cb.call(this)
-    }.bind(this));
+        resolve();
+      });
+    });
   },
 
   generatePublicKey: function () {
@@ -217,10 +221,10 @@ ChromeExtension.prototype = {
    * BC BREAK `this.package` is not stored anymore (since 1.0.0)
    *
    * @param {Buffer} signature
+   * @param {Buffer} publicKey
    * @returns {Buffer}
    */
-  generatePackage: function (signature) {
-    var publicKey = this.publicKey;
+  generatePackage: function (signature, publicKey) {
     var contents = this.contents;
 
     var keyLength = publicKey.length;
