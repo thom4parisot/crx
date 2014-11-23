@@ -11,22 +11,19 @@ var crx = new ChromeExtension({
 test('it should pack the test extension', function(t){
   t.plan(3);
 
-  crx.pack(function(err, data){
-    if (err) {
-      throw err;
-    }
+  crx.pack()
+    .then(function(packageData){
+      t.ok(packageData instanceof Buffer);
 
-    t.ok(data instanceof Buffer);
+      var updateXML = crx.generateUpdateXML();
 
-    var updateXML = this.generateUpdateXML();
+      t.ok(updateXML instanceof Buffer);
 
-    t.ok(updateXML instanceof Buffer);
+      fs.writeFile(join(__dirname, "update.xml"), updateXML);
+      fs.writeFile(join(__dirname, "myFirstExtension.crx"), packageData);
 
-    fs.writeFile(join(__dirname, "update.xml"), updateXML);
-    fs.writeFile(join(__dirname, "myFirstExtension.crx"), data);
-
-    this.destroy().then(function(err) {
-      t.equal(err, undefined);
-    });
-  });
+      return crx.destroy();
+    })
+    .then(t.pass.bind(t))
+    .catch(t.error.bind(t));
 });

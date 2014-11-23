@@ -65,28 +65,48 @@ ChromeExtension.prototype = {
     });
   },
 
-  pack: function (cb) {
+  /**
+   * Packs the content of the extension in a crx file.
+   *
+   * @returns {Promise}
+   * @example
+   *
+   * crx.pack().then(function(crxContent){
+   *  // do something with the crxContent binary data
+   * });
+   *
+   */
+  pack: function () {
     if (!this.loaded) {
-      return this.load().then(this.pack.bind(this, cb));
+      return this.load().then(this.pack.bind(this));
     }
 
-    this.generatePublicKey(function (err) {
-      if (err) return cb(err);
+    var selfie = this;
 
-      var manifest = JSON.stringify(this.manifest);
+    return this.generatePublicKey()
+      .then(function(publicKey){
+        selfie.publicKey = publicKey;
 
-      this.writeFile("manifest.json", manifest, function (err) {
-        if (err) return cb(err);
+        return new Promise(function(resolve, reject){
+          var manifest = JSON.stringify(selfie.manifest);
 
-        this.loadContents(function (err) {
-          if (err) return cb(err);
+          selfie.writeFile("manifest.json", manifest, function (err) {
+            if (err) {
+              return reject(err);
+            }
 
-          var signature = this.generateSignature();
+            selfie.loadContents(function (err) {
+              if (err){
+                return reject(err);
+              }
 
-          cb.call(this, null, this.generatePackage(signature))
-        })
-      })
-    })
+              var signature = selfie.generateSignature();
+
+              resolve(selfie.generatePackage(signature));
+            })
+          })
+        });
+      });
   },
 
   /**
@@ -125,15 +145,20 @@ ChromeExtension.prototype = {
     }.bind(this));
   },
 
-  generatePublicKey: function (cb) {
-    var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"])
+  generatePublicKey: function () {
+    var privateKey = this.privateKey;
 
-    rsa.stdout.on("data", function (data) {
-      this.publicKey = data;
-      cb && cb.call(this, null, this)
-    }.bind(this));
+    return new Promise(function(resolve, reject){
+      var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"]);
 
-    rsa.stdin.end(this.privateKey)
+      rsa.stdout.on("data", function (publicKey) {
+        resolve(publicKey);
+      });
+
+      rsa.on('error', reject);
+
+      rsa.stdin.end(privateKey);
+    });
   },
 
   /**
