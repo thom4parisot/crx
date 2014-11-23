@@ -4,42 +4,66 @@ var fs = require("fs");
 var path = require("path");
 var join = path.join;
 var crypto = require("crypto");
-var child = require("child_process");
+var spawn = require("child_process").spawn;
 var wrench = require("wrench");
 var archiver = require("archiver");
-var spawn = child.spawn;
 
-module.exports = new function() {
-  function ChromeExtension(attrs) {
-    if (this instanceof ChromeExtension) {
-      for (var name in attrs) this[name] = attrs[name]
-
-      this.path = join("tmp", "crx-" + (Math.random() * 1e17).toString(36))
-    }
-
-    else return new ChromeExtension(attrs)
+function ChromeExtension(attrs) {
+  if ((this instanceof ChromeExtension) !== true) {
+    return new ChromeExtension(attrs);
   }
 
-  ChromeExtension.prototype = this;
+  /*
+   Defaults
+   */
+  this.manifest = '';
 
-  this.destroy = function() {
+  this.loaded = false;
+
+  this.package = null;
+
+  this.rootDirectory = '';
+
+  this.publicKey = null;
+
+  this.privateKey = null;
+
+  this.signature = null;
+
+  this.contents = null;
+
+  this.codebase = null;
+
+  /*
+  Copying attributes
+   */
+  for (var name in attrs) {
+    this[name] = attrs[name];
+  }
+
+  this.path = join("tmp", "crx-" + (Math.random() * 1e17).toString(36))
+}
+
+ChromeExtension.prototype = {
+
+  destroy: function () {
     wrench.rmdirSyncRecursive(path.dirname(this.path))
-  };
+  },
 
-  this.pack = function(cb) {
-    if (!this.loaded) return this.load(function(err) {
+  pack: function (cb) {
+    if (!this.loaded) return this.load(function (err) {
       return err ? cb(err) : this.pack(cb)
     });
 
-    this.generatePublicKey(function(err) {
+    this.generatePublicKey(function (err) {
       if (err) return cb(err);
 
       var manifest = JSON.stringify(this.manifest);
 
-      this.writeFile("manifest.json", manifest, function(err) {
+      this.writeFile("manifest.json", manifest, function (err) {
         if (err) return cb(err);
 
-        this.loadContents(function(err) {
+        this.loadContents(function (err) {
           if (err) return cb(err);
 
           this.generateSignature();
@@ -49,53 +73,55 @@ module.exports = new function() {
         })
       })
     })
-  };
+  },
 
-  this.load = function(cb) {
+  load: function (cb) {
     if (!fs.existsSync("tmp")) {
       fs.mkdirSync("tmp");
     }
-    wrench.copyDirRecursive(this.rootDirectory, this.path, function(err) {
-      if (err) { throw err }
-      this.manifest = require(join(process.cwd(), this.path, "manifest.json"))
-      this.loaded = true
+    wrench.copyDirRecursive(this.rootDirectory, this.path, function (err) {
+      if (err) {
+        throw err
+      }
+      this.manifest = require(join(process.cwd(), this.path, "manifest.json"));
+      this.loaded = true;
 
-      cb.call(this)
-    }.bind(this))
-  };
+      cb.call(this);
+    }.bind(this));
+  },
 
-  this.readFile = function(name, cb) {
-    var path = join(this.path, name)
+  readFile: function (name, cb) {
+    var path = join(this.path, name);
 
-    fs.readFile(path, "binary", function(err, data) {
-      if (err) return cb.call(this, err)
+    fs.readFile(path, "binary", function (err, data) {
+      if (err) return cb.call(this, err);
 
       cb.call(this, null, this[name] = data)
     }.bind(this));
-  };
+  },
 
-  this.writeFile = function(path, data, cb) {
+  writeFile: function (path, data, cb) {
     path = join(this.path, path);
 
-    fs.writeFile(path, data, function(err, data) {
+    fs.writeFile(path, data, function (err, data) {
       if (err) return cb.call(this, err);
 
       cb.call(this)
     }.bind(this));
-  };
+  },
 
-  this.generatePublicKey = function(cb) {
+  generatePublicKey: function (cb) {
     var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"])
 
-    rsa.stdout.on("data", function(data) {
+    rsa.stdout.on("data", function (data) {
       this.publicKey = data;
       cb && cb.call(this, null, this)
     }.bind(this));
 
     rsa.stdin.end(this.privateKey)
-  };
+  },
 
-  this.generateSignature = function() {
+  generateSignature: function () {
     return this.signature = new Buffer(
       crypto
         .createSign("sha1")
@@ -104,20 +130,19 @@ module.exports = new function() {
 
       "binary"
     )
-  };
+  },
 
-  this.loadContents = function(cb) {
+  loadContents: function (cb) {
     var archive = archiver("zip");
     this.contents = "";
 
-
     var files = wrench.readdirSyncRecursive(this.path);
 
-    files.forEach(function(current){
+    files.forEach(function (current) {
       var stat = fs.statSync(join(this.path, current));
 
       if (stat.isFile() && current !== "key.pem") {
-        archive.append(fs.createReadStream(join(this.path, current)), { name: current })
+        archive.append(fs.createReadStream(join(this.path, current)), {name: current})
       }
     }, this);
 
@@ -127,23 +152,23 @@ module.exports = new function() {
     // https://github.com/jed/crx/issues/18
     // TODO: Buffer concat could be a problem when building a big extension.
     //       So ideally only the 'finish' callback must be used.
-    archive.on('readable', function() {
+    archive.on('readable', function () {
       this.contents = !this.contents.length ? archive.read() : Buffer.concat([this.contents, archive.read()]);
     }.bind(this));
 
-    archive.on('finish', function() {
+    archive.on('finish', function () {
       cb.call(this);
     }.bind(this));
 
-    archive.on("error", function(err) {
+    archive.on("error", function (err) {
       throw err;
     });
-  };
+  },
 
-  this.generatePackage = function() {
+  generatePackage: function () {
     var signature = this.signature;
     var publicKey = this.publicKey;
-    var contents  = this.contents;
+    var contents = this.contents;
 
     var keyLength = publicKey.length;
     var sigLength = signature.length;
@@ -163,20 +188,20 @@ module.exports = new function() {
     contents.copy(crx, 16 + keyLength + sigLength);
 
     return this.package = crx
-  };
+  },
 
-  this.generateAppId = function() {
+  generateAppId: function () {
     return this.appId = crypto
       .createHash("sha256")
       .update(this.publicKey)
       .digest("hex")
       .slice(0, 32)
-      .replace(/./g, function(x) {
+      .replace(/./g, function (x) {
         return (parseInt(x, 16) + 10).toString(26);
       });
-  };
+  },
 
-  this.generateUpdateXML = function() {
+  generateUpdateXML: function () {
     if (!this.codebase) throw new Error("No URL provided for update.xml.");
 
     return this.updateXML =
@@ -188,7 +213,7 @@ module.exports = new function() {
         "  </app>\n" +
         "</gupdate>"
       );
-  };
-
-  return ChromeExtension;
+  }
 };
+
+module.exports = ChromeExtension;
