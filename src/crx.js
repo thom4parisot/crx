@@ -149,6 +149,18 @@ ChromeExtension.prototype = {
     });
   },
 
+  /**
+   * Generates a public key.
+   *
+   * BC BREAK `this.publicKey` is not stored anymore (since 1.0.0)
+   *
+   * @returns {Promise}
+   * @example
+   *
+   * crx.generatePublicKey(function(publicKey){
+   *   // do something with publicKey
+   * });
+   */
   generatePublicKey: function () {
     var privateKey = this.privateKey;
 
@@ -179,7 +191,7 @@ ChromeExtension.prototype = {
         .update(this.contents)
         .sign(this.privateKey),
       "binary"
-    )
+    );
   },
 
   loadContents: function (cb) {
