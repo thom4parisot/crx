@@ -30,8 +30,6 @@ function ChromeExtension(attrs) {
 
   this.privateKey = null;
 
-  this.contents = null;
-
   this.codebase = null;
 
   /*
@@ -88,17 +86,11 @@ ChromeExtension.prototype = {
       .then(function(publicKey){
         selfie.publicKey = publicKey;
 
-        return new Promise(function(resolve, reject){
-          selfie.loadContents(function (err) {
-            if (err){
-              return reject(err);
-            }
+        return selfie.loadContents().then(function (contents) {
+          var signature = selfie.generateSignature(contents);
 
-            var signature = selfie.generateSignature();
-
-            resolve(selfie.generatePackage(signature, publicKey));
-          })
-        });
+          return selfie.generatePackage(signature, publicKey, contents);
+        })
       });
   },
 
@@ -182,48 +174,72 @@ ChromeExtension.prototype = {
    *
    * BC BREAK `this.signature` is not stored anymore (since 1.0.0)
    *
+   * @param {Buffer} contents
    * @returns {Buffer}
    */
-  generateSignature: function () {
+  generateSignature: function (contents) {
     return new Buffer(
       crypto
         .createSign("sha1")
-        .update(this.contents)
+        .update(contents)
         .sign(this.privateKey),
       "binary"
     );
   },
 
-  loadContents: function (cb) {
+  /**
+   *
+   * BC BREAK `this.contents` is not stored anymore (since 1.0.0)
+   *
+   * @returns {Promise}
+   */
+  loadContents: function () {
     var archive = archiver("zip");
-    this.contents = "";
+    var selfie = this;
 
-    var files = wrench.readdirSyncRecursive(this.path);
+    return new Promise(function(resolve, reject){
+      var contents = new Buffer('');
+      var allFiles = [];
 
-    files.forEach(function (current) {
-      var stat = fs.statSync(join(this.path, current));
+      // the callback is called many times
+      // when 'files' is null, it means we accumulated everything
+      // hence this weird setup
+      wrench.readdirRecursive(selfie.path, function(err, files){
+        if (err){
+          return reject(err);
+        }
 
-      if (stat.isFile() && current !== "key.pem") {
-        archive.append(fs.createReadStream(join(this.path, current)), {name: current})
-      }
-    }, this);
+        // stack unless 'files' is null
+        if (files){
+          allFiles = allFiles.concat(files);
+          return;
+        }
 
-    archive.finalize();
+        allFiles.forEach(function (file) {
+          var filePath = join(selfie.path, file);
+          var stat = fs.statSync(filePath);
 
-    // Relates to the issue: "Event 'finished' no longer valid #18"
-    // https://github.com/jed/crx/issues/18
-    // TODO: Buffer concat could be a problem when building a big extension.
-    //       So ideally only the 'finish' callback must be used.
-    archive.on('readable', function () {
-      this.contents = !this.contents.length ? archive.read() : Buffer.concat([this.contents, archive.read()]);
-    }.bind(this));
+          if (stat.isFile() && file !== "key.pem") {
+            archive.append(fs.createReadStream(filePath), { name: file });
+          }
+        });
 
-    archive.on('finish', function () {
-      cb.call(this);
-    }.bind(this));
+        archive.finalize();
 
-    archive.on("error", function (err) {
-      throw err;
+        // Relates to the issue: "Event 'finished' no longer valid #18"
+        // https://github.com/jed/crx/issues/18
+        // TODO: Buffer concat could be a problem when building a big extension.
+        //       So ideally only the 'finish' callback must be used.
+        archive.on('readable', function () {
+          contents = Buffer.concat([contents, archive.read()]);
+        });
+
+        archive.on('finish', function () {
+          resolve(contents);
+        });
+
+        archive.on("error", reject);
+      });
     });
   },
 
@@ -234,11 +250,10 @@ ChromeExtension.prototype = {
    *
    * @param {Buffer} signature
    * @param {Buffer} publicKey
+   * @param {Buffer} contents
    * @returns {Buffer}
    */
-  generatePackage: function (signature, publicKey) {
-    var contents = this.contents;
-
+  generatePackage: function (signature, publicKey, contents) {
     var keyLength = publicKey.length;
     var sigLength = signature.length;
     var zipLength = contents.length;
