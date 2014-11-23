@@ -118,16 +118,6 @@ ChromeExtension.prototype = {
     });
   },
 
-  readFile: function (name, cb) {
-    var path = join(this.path, name);
-
-    fs.readFile(path, "binary", function (err, data) {
-      if (err) return cb.call(this, err);
-
-      cb.call(this, null, this[name] = data)
-    }.bind(this));
-  },
-
   writeFile: function (path, data, cb) {
     path = join(this.path, path);
 
