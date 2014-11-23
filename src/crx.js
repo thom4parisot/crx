@@ -18,6 +18,8 @@ function ChromeExtension(attrs) {
   /*
    Defaults
    */
+  this.appId = null;
+
   this.manifest = '';
 
   this.loaded = false;
@@ -208,8 +210,15 @@ ChromeExtension.prototype = {
     return this.package = crx
   },
 
+  /**
+   * Generates an appId from the publicKey.
+   *
+   * BC BREAK `this.appId` is not stored anymore (since 1.0.0)
+   *
+   * @returns {string}
+   */
   generateAppId: function () {
-    return this.appId = crypto
+    return crypto
       .createHash("sha256")
       .update(this.publicKey)
       .digest("hex")
@@ -219,18 +228,26 @@ ChromeExtension.prototype = {
       });
   },
 
+  /**
+   * Generates an updateXML file from the extension content.
+   *
+   * BC BREAK `this.updateXML` is not stored anymore (since 1.0.0)
+   *
+   * @returns {Buffer}
+   */
   generateUpdateXML: function () {
-    if (!this.codebase) throw new Error("No URL provided for update.xml.");
+    if (!this.codebase) {
+      throw new Error("No URL provided for update.xml.");
+    }
 
-    return this.updateXML =
-      Buffer(
-        "<?xml version='1.0' encoding='UTF-8'?>\n" +
-        "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
-        "  <app appid='" + this.generateAppId() + "'>\n" +
-        "    <updatecheck codebase='" + this.codebase + "' version='" + this.manifest.version + "' />\n" +
-        "  </app>\n" +
-        "</gupdate>"
-      );
+    return Buffer(
+      "<?xml version='1.0' encoding='UTF-8'?>\n" +
+      "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
+      "  <app appid='" + (this.appId || this.generateAppId()) + "'>\n" +
+      "    <updatecheck codebase='" + this.codebase + "' version='" + this.manifest.version + "' />\n" +
+      "  </app>\n" +
+      "</gupdate>"
+    );
   }
 };
 
