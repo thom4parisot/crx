@@ -4,6 +4,8 @@ node_js:
   - '0.10'
   - '0.11'
 
+sudo: false
+
 before_install:
   - npm install --global npm@1.4.6
 
