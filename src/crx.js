@@ -1,193 +1,319 @@
-var fs = require("fs")
-  , path = require("path")
-  , join = path.join
-  , sep = require("path").sep
-  , crypto = require("crypto")
-  , child = require("child_process")
-  , wrench = require("wrench")
-  , archiver = require("archiver")
-  , spawn = child.spawn
-  , exec = child.exec
+'use strict';
 
-module.exports = new function() {
-  function ChromeExtension(attrs) {
-    if (this instanceof ChromeExtension) {
-      for (var name in attrs) this[name] = attrs[name]
+var fs = require("fs");
+var path = require("path");
+var join = path.join;
+var crypto = require("crypto");
+var spawn = require("child_process").spawn;
+var wrench = require("wrench");
+var archiver = require("archiver");
+var rm = require('rimraf');
+var Promise = require('es6-promise').Promise;
 
-      this.path = join("tmp", "crx-" + (Math.random() * 1e17).toString(36))
+function ChromeExtension(attrs) {
+  if ((this instanceof ChromeExtension) !== true) {
+    return new ChromeExtension(attrs);
+  }
+
+  /*
+   Defaults
+   */
+  this.appId = null;
+
+  this.manifest = '';
+
+  this.loaded = false;
+
+  this.rootDirectory = '';
+
+  this.publicKey = null;
+
+  this.privateKey = null;
+
+  this.codebase = null;
+
+  /*
+  Copying attributes
+   */
+  for (var name in attrs) {
+    this[name] = attrs[name];
+  }
+
+  this.path = join("tmp", "crx-" + (Math.random() * 1e17).toString(36))
+}
+
+ChromeExtension.prototype = {
+
+  /**
+   * Destroys generated files.
+   *
+   * @returns {Promise}
+   */
+  destroy: function () {
+    var path = this.path;
+
+    return new Promise(function(resolve, reject){
+      rm(path, function(err){
+        if (err){
+          return reject(err);
+        }
+
+        resolve();
+      });
+    });
+  },
+
+  /**
+   * Packs the content of the extension in a crx file.
+   *
+   * @returns {Promise}
+   * @example
+   *
+   * crx.pack().then(function(crxContent){
+   *  // do something with the crxContent binary data
+   * });
+   *
+   */
+  pack: function () {
+    if (!this.loaded) {
+      return this.load().then(this.pack.bind(this));
     }
 
-    else return new ChromeExtension(attrs)
-  }
+    var selfie = this;
 
-  ChromeExtension.prototype = this
+    return selfie.writeFile("manifest.json", JSON.stringify(selfie.manifest))
+      .then(this.generatePublicKey.bind(this))
+      .then(function(publicKey){
+        selfie.publicKey = publicKey;
 
-  this.destroy = function() {
-    wrench.rmdirSyncRecursive(path.dirname(this.path))
-  }
+        return selfie.loadContents().then(function (contents) {
+          var signature = selfie.generateSignature(contents);
 
-  this.pack = function(cb) {
-    if (!this.loaded) return this.load(function(err) {
-      return err ? cb(err) : this.pack(cb)
-    })
-
-    this.generatePublicKey(function(err) {
-      if (err) return cb(err)
-
-      var manifest = JSON.stringify(this.manifest)
-
-      this.writeFile("manifest.json", manifest, function(err) {
-        if (err) return cb(err)
-        
-        this.loadContents(function(err) {
-          if (err) return cb(err)
-
-          this.generateSignature()
-          this.generatePackage()
-
-          cb.call(this, null, this.package)
+          return selfie.generatePackage(signature, publicKey, contents);
         })
-      })
-    })
-  }
+      });
+  },
 
-  this.load = function(cb) {
+  /**
+   * Loads extension manifest and copies its content to a workable path.
+   *
+   * @param {string=} path
+   * @returns {Promise}
+   */
+  load: function (path) {
     if (!fs.existsSync("tmp")) {
-      fs.mkdirSync("tmp")
+      fs.mkdirSync("tmp");
     }
-    wrench.copyDirRecursive(this.rootDirectory, this.path, function(err) {
-      if (err) { throw err }
-      this.manifest = require(join(process.cwd(), this.path, "manifest.json"))
-      this.loaded = true
 
-      cb.call(this)
-    }.bind(this))
-  }
+    var selfie = this;
 
-  this.readFile = function(name, cb) {
-    var path = join(this.path, name)
+    return new Promise(function(resolve, reject){
+      wrench.copyDirRecursive(path || selfie.rootDirectory, selfie.path, function (err) {
+        if (err) {
+          return reject(err);
+        }
 
-    fs.readFile(path, "binary", function(err, data) {
-      if (err) return cb.call(this, err)
+        selfie.manifest = require(join(process.cwd(), selfie.path, "manifest.json"));
+        selfie.loaded = true;
 
-      cb.call(this, null, this[name] = data)
-    }.bind(this))
-  }
+        resolve(selfie);
+      });
+    });
+  },
 
-  this.writeFile = function(path, data, cb) {
-    path = join(this.path, path)
+  /**
+   * Writes data into the extension workable directory.
+   *
+   * @param {string} path
+   * @param {*} data
+   * @returns {Promise}
+   */
+  writeFile: function (path, data) {
+    var absPath = join(this.path, path);
 
-    fs.writeFile(path, data, function(err, data) {
-      if (err) return cb.call(this, err)
+    return new Promise(function(resolve, reject){
+      fs.writeFile(absPath, data, function (err) {
+        if (err) {
+          return reject(err);
+        }
 
-      cb.call(this)
-    }.bind(this))
-  }
+        resolve();
+      });
+    });
+  },
 
-  this.generatePublicKey = function(cb) {
-    var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"])
+  /**
+   * Generates a public key.
+   *
+   * BC BREAK `this.publicKey` is not stored anymore (since 1.0.0)
+   *
+   * @returns {Promise}
+   * @example
+   *
+   * crx.generatePublicKey(function(publicKey){
+   *   // do something with publicKey
+   * });
+   */
+  generatePublicKey: function () {
+    var privateKey = this.privateKey;
 
-    rsa.stdout.on("data", function(data) {
-      this.publicKey = data
-      cb && cb.call(this, null, this)
-    }.bind(this))
+    return new Promise(function(resolve, reject){
+      var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"]);
 
-    rsa.stdin.end(this.privateKey)
-  }
+      rsa.stdout.on("data", function (publicKey) {
+        resolve(publicKey);
+      });
 
-  this.generateSignature = function() {
-    return this.signature = new Buffer(
+      rsa.on('error', reject);
+
+      rsa.stdin.end(privateKey);
+    });
+  },
+
+  /**
+   * Generates a SHA1 package signature.
+   *
+   * BC BREAK `this.signature` is not stored anymore (since 1.0.0)
+   *
+   * @param {Buffer} contents
+   * @returns {Buffer}
+   */
+  generateSignature: function (contents) {
+    return new Buffer(
       crypto
         .createSign("sha1")
-        .update(this.contents)
+        .update(contents)
         .sign(this.privateKey),
-
       "binary"
-    )
-  }
+    );
+  },
 
-  this.loadContents = function(cb) {
-    var archive = archiver("zip")
-    this.contents = ""
+  /**
+   *
+   * BC BREAK `this.contents` is not stored anymore (since 1.0.0)
+   *
+   * @returns {Promise}
+   */
+  loadContents: function () {
+    var archive = archiver("zip");
+    var selfie = this;
 
-    files = wrench.readdirSyncRecursive(this.path)
-    
-    for (var i = 0; i < files.length; i++) {
-      current = files[i]
-      stat = fs.statSync(join(this.path, current))
-      if (stat.isFile() && current !== "key.pem") {
-        archive.append(fs.createReadStream(join(this.path, current)), { name: current })
-      }
-    }
+    return new Promise(function(resolve, reject){
+      var contents = new Buffer('');
+      var allFiles = [];
 
-    archive.finalize()
-    
-    // Relates to the issue: "Event 'finished' no longer valid #18"
-    // https://github.com/jed/crx/issues/18
-    // TODO: Buffer concat could be a problem when building a big extension.
-    //       So ideally only the 'finish' callback must be used.
-    archive.on('readable', function() {
-      this.contents = !this.contents.length ? archive.read() : Buffer.concat([this.contents, archive.read()])
-    }.bind(this))
+      // the callback is called many times
+      // when 'files' is null, it means we accumulated everything
+      // hence this weird setup
+      wrench.readdirRecursive(selfie.path, function(err, files){
+        if (err){
+          return reject(err);
+        }
 
-    archive.on('finish', function() {
-      cb.call(this)
-    }.bind(this))
+        // stack unless 'files' is null
+        if (files){
+          allFiles = allFiles.concat(files);
+          return;
+        }
 
-    archive.on("error", function(err) {
-      throw err
-    })
-  }
-  
-  this.generatePackage = function() {
-    var signature = this.signature
-      , publicKey = this.publicKey
-      , contents  = this.contents
+        allFiles.forEach(function (file) {
+          var filePath = join(selfie.path, file);
+          var stat = fs.statSync(filePath);
 
-      , keyLength = publicKey.length
-      , sigLength = signature.length
-      , zipLength = contents.length
-      , length = 16 + keyLength + sigLength + zipLength
+          if (stat.isFile() && file !== "key.pem") {
+            archive.append(fs.createReadStream(filePath), { name: file });
+          }
+        });
 
-      , crx = new Buffer(length)
+        archive.finalize();
 
-    crx.write("Cr24" + Array(13).join("\x00"), "binary")
+        // Relates to the issue: "Event 'finished' no longer valid #18"
+        // https://github.com/jed/crx/issues/18
+        // TODO: Buffer concat could be a problem when building a big extension.
+        //       So ideally only the 'finish' callback must be used.
+        archive.on('readable', function () {
+          contents = Buffer.concat([contents, archive.read()]);
+        });
 
-    crx[4] = 2
-    crx.writeUInt32LE(keyLength, 8)
-    crx.writeUInt32LE(sigLength, 12)
+        archive.on('finish', function () {
+          resolve(contents);
+        });
 
-    publicKey.copy(crx, 16)
-    signature.copy(crx, 16 + keyLength)
-    contents.copy(crx, 16 + keyLength + sigLength)
+        archive.on("error", reject);
+      });
+    });
+  },
 
-    return this.package = crx
-  }
+  /**
+   * Generates and returns a signed package from extension content.
+   *
+   * BC BREAK `this.package` is not stored anymore (since 1.0.0)
+   *
+   * @param {Buffer} signature
+   * @param {Buffer} publicKey
+   * @param {Buffer} contents
+   * @returns {Buffer}
+   */
+  generatePackage: function (signature, publicKey, contents) {
+    var keyLength = publicKey.length;
+    var sigLength = signature.length;
+    var zipLength = contents.length;
+    var length = 16 + keyLength + sigLength + zipLength;
 
-  this.generateAppId = function() {
-    return this.appId = crypto
+    var crx = new Buffer(length);
+
+    crx.write("Cr24" + Array(13).join("\x00"), "binary");
+
+    crx[4] = 2;
+    crx.writeUInt32LE(keyLength, 8);
+    crx.writeUInt32LE(sigLength, 12);
+
+    publicKey.copy(crx, 16);
+    signature.copy(crx, 16 + keyLength);
+    contents.copy(crx, 16 + keyLength + sigLength);
+
+    return crx;
+  },
+
+  /**
+   * Generates an appId from the publicKey.
+   *
+   * BC BREAK `this.appId` is not stored anymore (since 1.0.0)
+   *
+   * @returns {string}
+   */
+  generateAppId: function () {
+    return crypto
       .createHash("sha256")
       .update(this.publicKey)
       .digest("hex")
       .slice(0, 32)
-      .replace(/./g, function(x) {
-        return (parseInt(x, 16) + 10).toString(26)
-      })
+      .replace(/./g, function (x) {
+        return (parseInt(x, 16) + 10).toString(26);
+      });
+  },
+
+  /**
+   * Generates an updateXML file from the extension content.
+   *
+   * BC BREAK `this.updateXML` is not stored anymore (since 1.0.0)
+   *
+   * @returns {Buffer}
+   */
+  generateUpdateXML: function () {
+    if (!this.codebase) {
+      throw new Error("No URL provided for update.xml.");
+    }
+
+    return Buffer(
+      "<?xml version='1.0' encoding='UTF-8'?>\n" +
+      "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
+      "  <app appid='" + (this.appId || this.generateAppId()) + "'>\n" +
+      "    <updatecheck codebase='" + this.codebase + "' version='" + this.manifest.version + "' />\n" +
+      "  </app>\n" +
+      "</gupdate>"
+    );
   }
+};
 
-  this.generateUpdateXML = function() {
-    if (!this.codebase) throw new Error("No URL provided for update.xml.")
-
-    return this.updateXML =
-      Buffer(
-        "<?xml version='1.0' encoding='UTF-8'?>\n" +
-        "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
-        "  <app appid='" + this.generateAppId() + "'>\n" +
-        "    <updatecheck codebase='" + this.codebase + "' version='" + this.manifest.version + "' />\n" +
-        "  </app>\n" +
-        "</gupdate>"
-      )
-  }
-
-  return ChromeExtension
-}
+module.exports = ChromeExtension;

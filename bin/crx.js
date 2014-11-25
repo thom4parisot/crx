@@ -1,21 +1,21 @@
 #!/usr/bin/env node
 
-var path = require("path")
-  , fs = require("fs")
-  , child = require("child_process")
+var path = require("path");
+var fs = require("fs");
+var child = require("child_process");
 
-  , program = require("commander")
-  , ChromeExtension = require("..")
+var program = require("commander");
+var ChromeExtension = require("..");
+var pkg = require('../package.json');
 
-  , resolve = path.resolve
-  , join = path.join
-  , spawn = child.spawn
-  , exec = child.exec
+var resolve = path.resolve;
+var join = path.join;
+var exec = child.exec;
 
-  , cwd = process.cwd()
+var cwd = process.cwd();
 
 program
-  .version("0.2.8")
+  .version(pkg.version)
   .option("-f, --file [file]", "input/output <file> instead of stdin/stdout")
   .option("-p, --private-key <file>", "relative path to private key [key.pem]")
   .option("-b, --max-buffer <total>", "max amount of memory allowed to generate the crx, in byte")
@@ -25,71 +25,69 @@ program
 program
   .command("keygen [directory]")
   .description("generate a private key in [directory]/key.pem")
-  .action(keygen)
+  .action(keygen);
 
 program
   .command("pack [directory]")
   .description("pack [directory] into a .crx extension")
-  .action(pack)
+  .action(pack);
 
 // program
 //   .command("unpack [directory]")
 //   .description("unpack a .crx extension into a directory")
-//   .action(unpack)
+//   .action(unpack);
 
-program.parse(process.argv)
+program.parse(process.argv);
 
 function keygen(dir, cb) {
-  dir = resolve(cwd, dir)
+  dir = resolve(cwd, dir);
 
-  var key = join(dir, "key.pem")
+  var key = join(dir, "key.pem");
 
   fs.exists(key, function(exists) {
-    if (exists) return cb && typeof(cb) == "function" && cb()
+    if (exists) {
+      return cb && typeof(cb) == "function" && cb();
+    }
 
-    var pubPath = key + ".pub"
-      , command = "ssh-keygen -N '' -b 1024 -t rsa -f key.pem"
+    var pubPath = key + ".pub";
+    var command = "ssh-keygen -N '' -b 1024 -t rsa -f key.pem";
 
     exec(command, {cwd: dir}, function(err) {
-      if (err) throw err
+      if (err){
+        throw err;
+      }
 
       // TODO: find a way to prevent .pub output
-      fs.unlink(pubPath)
-      cb && typeof(cb) == "function" && cb()
+      fs.unlink(pubPath);
+
+      cb && typeof(cb) == "function" && cb();
     })
   })
 }
 
 function pack(dir) {
-  var input = resolve(cwd, dir)
-    , output = 
-      program.file === true ? input + ".crx" :
-      program.file ? resolve(cwd, program.file) : false
+  var input = resolve(cwd, dir);
+  var output = program.file === true ? input + ".crx" : (program.file ? resolve(cwd, program.file) : false);
 
-    , stream = output ? fs.createWriteStream(output) : process.stdout
-    , key = program.privateKey 
-        ? resolve(cwd, program.privateKey)
-        : join(input, "key.pem")
+  var stream = output ? fs.createWriteStream(output) : process.stdout;
+  var key = program.privateKey ? resolve(cwd, program.privateKey) : join(input, "key.pem");
 
-    , crx = new ChromeExtension({
-      rootDirectory: input,
-      maxBuffer: program.maxBuffer
-    })
+  var crx = new ChromeExtension({
+    rootDirectory: input,
+    maxBuffer: program.maxBuffer
+  });
 
   fs.readFile(key, function(err, data) {
-    if (err) keygen(dir, pack.bind(null, dir))
+    if (err) {
+      throw err;
+    }
 
-    crx.privateKey = data
+    crx.privateKey = data;
 
-    crx.load(function(err) {
-      if (err) throw err
+    crx.pack().then(function(crxBuffer) {
+      stream.end(crxBuffer);
 
-      this.pack(function(err, data){
-        if (err) throw err
-
-        stream.end(data)
-        this.destroy()
-      })
-    })
-  })
+      return crx.destroy();
+    });
+  });
 }
