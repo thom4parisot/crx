@@ -115,11 +115,11 @@ crx.load(join(__dirname, "myFirstExtension"))
 
 ## CLI API
 
-### crx pack [directory] [-f file] [-p private-key]
+### crx pack [directory] [-o file] [-p private-key]
 
 Pack the specified directory into a .crx package, and output it to stdout. If no directory is specified, the current working directory is used.
 
-Use the `-f` option to output to a file instead of stdout; if no file is specified, the package is given the same name as the directory basename.
+Use the `-o` option to output to a file instead of stdout.
 
 Use the `-p` option to specify an external private key. If this is not used, `key.pem` is used from within the directory. If this option is not used and no `key.pem` file exists, one will be generated automatically.
 
@@ -128,6 +128,8 @@ Use the `-b` option to specify the maximum buffer allowed to generate extension.
 ### crx keygen [directory]
 
 Generate a 1,024-bit RSA private key within the directory. This is called automatically if a key is not specified, and `key.pem` does not exist.
+
+Use the `--force` option to overwrite an existing private key located in the same given folder.
 
 ### crx -h
 
