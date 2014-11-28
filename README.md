@@ -19,9 +19,9 @@ Asynchronous functions returns an [ES6 Promise](https://github.com/jakearchibald
 
 This module exports the `ChromeExtension` constructor directly, which can take an optional attribute object, which is used to extend the instance.
 
-### crx.load(path)
+### crx.load([path])
 
-Asynchronously loads the Chrome Extension from the specified path (or uses the `attr.rootDirectory` value).
+Asynchronously prepares the temporary workspace for the Chrome Extension located at `attr.rootDirectory`.
 
 ```js
 crx.load().then(function(crx){
@@ -29,7 +29,9 @@ crx.load().then(function(crx){
 });
 ```
 
-### crx.pack()
+You can optionally pass a `path` argument in lieu of the `rootDirectory` constructor option.
+
+### crx.pack([archiveBuffer])
 
 Packs the Chrome Extension and resolves the promise with a Buffer containing the `.crx` file.
 
@@ -37,6 +39,25 @@ Packs the Chrome Extension and resolves the promise with a Buffer containing the
 crx.pack().then(function(crxBuffer){
   fs.writeFile('/tmp/foobar.crx', crxBuffer);
 });
+```
+
+You can optionally pass an `archiveBuffer` argument if you want a finer grained control over the packing process:
+
+```js
+crx.load()
+  .then(function(){
+    return crx.loadContents();
+  })
+  .then(function(archiveBuffer){
+    fs.writeFile('path/to/extension.zip', archiveBuffer);
+
+    return crx.pack(archiveBuffer);
+  })
+  .then(function(crxBuffer){
+    fs.writeFile('path/to/extension.crx', crxBuffer);
+
+    crx.destroy();
+  });
 ```
 
 ### crx.generateUpdateXML()

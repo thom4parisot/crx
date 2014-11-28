@@ -28,6 +28,7 @@
     "wrench": "^1.5.0"
   },
   "devDependencies": {
+    "sinon": "^1.12.1",
     "tape": "^3.0.3"
   }
 }

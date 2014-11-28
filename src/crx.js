@@ -66,6 +66,7 @@ ChromeExtension.prototype = {
   /**
    * Packs the content of the extension in a crx file.
    *
+   * @param {Buffer=} contentsBuffer
    * @returns {Promise}
    * @example
    *
@@ -74,24 +75,28 @@ ChromeExtension.prototype = {
    * });
    *
    */
-  pack: function () {
+  pack: function (contentsBuffer) {
     if (!this.loaded) {
-      return this.load().then(this.pack.bind(this));
+      return this.load().then(this.pack.bind(this, contentsBuffer));
     }
 
     var selfie = this;
+    var packP = [
+      this.generatePublicKey(),
+      contentsBuffer || selfie.loadContents(),
+      this.writeFile("manifest.json", JSON.stringify(selfie.manifest))
+    ];
 
-    return selfie.writeFile("manifest.json", JSON.stringify(selfie.manifest))
-      .then(this.generatePublicKey.bind(this))
-      .then(function(publicKey){
-        selfie.publicKey = publicKey;
+    return Promise.all(packP).then(function(outputs){
+      var publicKey = outputs[0];
+      var contents = outputs[1];
 
-        return selfie.loadContents().then(function (contents) {
-          var signature = selfie.generateSignature(contents);
+      selfie.publicKey = publicKey;
 
-          return selfie.generatePackage(signature, publicKey, contents);
-        })
-      });
+      var signature = selfie.generateSignature(contents);
+
+      return selfie.generatePackage(signature, publicKey, contents);
+    });
   },
 
   /**
@@ -195,6 +200,10 @@ ChromeExtension.prototype = {
     return new Promise(function(resolve, reject){
       var contents = new Buffer('');
       var allFiles = [];
+
+      if (!selfie.loaded) {
+	throw new Error('crx.load needs to be called first in order to prepare the workspace.')
+      }
 
       // the callback is called many times
       // when 'files' is null, it means we accumulated everything
