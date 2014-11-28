@@ -85,8 +85,8 @@ function pack (dir, program) {
     crx.privateKey = data;
 
     crx.load().then(function () {
-	return crx.loadContents();
-      })
+      return crx.loadContents();
+    })
       .then(function (zipBuffer) {
 	if (program.zipOutput) {
 	  var outFile = resolve(cwd, program.zipOutput);
