@@ -4,7 +4,7 @@ var fs = require("fs");
 var path = require("path");
 var join = path.join;
 var crypto = require("crypto");
-var spawn = require("child_process").spawn;
+var RSA = require('node-rsa');
 var wrench = require("wrench");
 var archiver = require("archiver");
 var rm = require('rimraf');
@@ -158,15 +158,9 @@ ChromeExtension.prototype = {
     var privateKey = this.privateKey;
 
     return new Promise(function(resolve, reject){
-      var rsa = spawn("openssl", ["rsa", "-pubout", "-outform", "DER"]);
+      var key = new RSA(privateKey, 'pkcs1-private-pem');
 
-      rsa.stdout.on("data", function (publicKey) {
-        resolve(publicKey);
-      });
-
-      rsa.on('error', reject);
-
-      rsa.stdin.end(privateKey);
+      resolve(key.exportKey('pkcs8-public-der'));
     });
   },
 

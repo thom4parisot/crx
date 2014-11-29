@@ -1,11 +1,10 @@
 # crx [![Build Status](https://secure.travis-ci.org/oncletom/crx.svg)](http://travis-ci.org/oncletom/crx)
 
-crx is a [node.js](http://nodejs.org/) command line app for packing Google Chrome extensions. If you'd like to integrate it into your [grunt](http://gruntjs.com/) workflow, give [grunt-crx](https://github.com/oncletom/grunt-crx) a spin.
+crx is a [pure node.js](http://nodejs.org/) command line app for packing Google Chrome extensions. **No OpenSSL required**!
 
-## Requirements
+If you'd like to integrate it into your [grunt](http://gruntjs.com/) workflow, give [grunt-crx](https://github.com/oncletom/grunt-crx) a spin.
 
-* [node.js](http://nodejs.org/), tested with >= 0.7.12
-* openssl
+Massive hat tip to the [node-rsa project](https://github.com/rzcoder/node-rsa)!
 
 ## Install
 
@@ -53,7 +52,6 @@ crx.pack().then(function(crxBuffer){
   var xmlBuffer = crx.generateUpdateXML();
   fs.writeFile('/foo/bar/update.xml', xmlBuffer);
 });
-
 ```
 
 ### crx.destroy()
@@ -91,7 +89,7 @@ crx.load(join(__dirname, "myFirstExtension"))
 
       return crx.destroy();
     })
-  })
+  });
 ```
 
 ## CLI API

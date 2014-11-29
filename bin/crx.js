@@ -50,7 +50,7 @@ function keygen(dir, cb) {
 
     var key = new rsa({ b: 1024 });
 
-    fs.writeFile(keyPath, key.getPrivatePEM(), function(err){
+    fs.writeFile(keyPath, key.exportKey('pkcs1-private-pem'), function(err){
       if (err){
         throw err;
       }
