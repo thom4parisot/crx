@@ -13,76 +13,94 @@ var join = path.join;
 
 var cwd = process.cwd();
 
-program
-  .version(pkg.version)
-  .option("-f, --file [file]", "input/output <file> instead of stdin/stdout")
-  .option("-p, --private-key <file>", "relative path to private key [key.pem]")
-  .option("-b, --max-buffer <total>", "max amount of memory allowed to generate the crx, in byte")
-  // coming soon
-  // .option("-x, --xml", "output autoupdate xml instead of extension ")
+program.version(pkg.version)
+// coming soon
+// .option("-x, --xml", "output autoupdate xml instead of extension ")
 
 program
   .command("keygen [directory]")
+  .option("--force", "overwrite the private key if it exists")
   .description("generate a private key in [directory]/key.pem")
   .action(keygen);
 
 program
   .command("pack [directory]")
   .description("pack [directory] into a .crx extension")
+  .option("-o, --output <file>", "write the crx content to <file> instead of stdout")
+  .option("--zip-output <file>", "write the zip content to <file>")
+  .option("-p, --private-key <file>", "relative path to private key [key.pem]")
+  .option("-b, --max-buffer <total>", "max amount of memory allowed to generate the crx, in byte")
   .action(pack);
-
-// program
-//   .command("unpack [directory]")
-//   .description("unpack a .crx extension into a directory")
-//   .action(unpack);
 
 program.parse(process.argv);
 
-function keygen(dir, cb) {
+function keygen (dir, program) {
   dir = resolve(cwd, dir);
 
   var keyPath = join(dir, "key.pem");
 
-  fs.exists(keyPath, function(exists) {
-    if (exists) {
-      return cb && typeof(cb) == "function" && cb();
+  fs.exists(keyPath, function (exists) {
+    if (exists && !program.force) {
+      throw new Error('key.pem already exists in the given location.');
     }
 
-    var key = new rsa({ b: 1024 });
+    var key = new rsa({b: 1024});
 
     fs.writeFile(keyPath, key.exportKey('pkcs1-private-pem'), function(err){
       if (err){
         throw err;
       }
 
-      cb && typeof(cb) == "function" && cb();
+      console.log('%s has been generated in %s', 'key.pem', dir);
     })
   })
 }
 
-function pack(dir) {
+function pack (dir, program) {
   var input = resolve(cwd, dir);
-  var output = program.file === true ? input + ".crx" : (program.file ? resolve(cwd, program.file) : false);
-
-  var stream = output ? fs.createWriteStream(output) : process.stdout;
   var key = program.privateKey ? resolve(cwd, program.privateKey) : join(input, "key.pem");
+
+  if (program.output) {
+    if (path.extname(program.output) !== '.crx') {
+      throw new Error('-o file is expected to have a `.crx` suffix: [' + program.output + '] was given.');
+    }
+  }
+
+  if (program.zipOutput) {
+    if (path.extname(program.zipOutput) !== '.zip') {
+      throw new Error('--zip-output file is expected to have a `.zip` suffix: [' + program.zipOutput + '] was given.');
+    }
+  }
 
   var crx = new ChromeExtension({
     rootDirectory: input,
-    maxBuffer: program.maxBuffer
+    maxBuffer:     program.maxBuffer
   });
 
-  fs.readFile(key, function(err, data) {
+  fs.readFile(key, function (err, data) {
     if (err) {
       throw err;
     }
 
     crx.privateKey = data;
 
-    crx.pack().then(function(crxBuffer) {
-      stream.end(crxBuffer);
+    crx.load().then(function () {
+      return crx.loadContents();
+    })
+      .then(function (zipBuffer) {
+	if (program.zipOutput) {
+	  var outFile = resolve(cwd, program.zipOutput);
 
-      return crx.destroy();
-    });
+	  fs.createWriteStream(outFile).end(zipBuffer);
+	}
+
+	return crx.pack(zipBuffer);
+      })
+      .then(function (crxBuffer) {
+	var outFile = resolve(cwd, program.output);
+	(outFile ? fs.createWriteStream(outFile) : process.stdout).end(crxBuffer);
+
+	return crx.destroy();
+      });
   });
 }

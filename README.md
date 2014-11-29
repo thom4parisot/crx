@@ -19,9 +19,9 @@ Asynchronous functions returns an [ES6 Promise](https://github.com/jakearchibald
 
 This module exports the `ChromeExtension` constructor directly, which can take an optional attribute object, which is used to extend the instance.
 
-### crx.load(path)
+### crx.load([path])
 
-Asynchronously loads the Chrome Extension from the specified path (or uses the `attr.rootDirectory` value).
+Asynchronously prepares the temporary workspace for the Chrome Extension located at `attr.rootDirectory`.
 
 ```js
 crx.load().then(function(crx){
@@ -29,7 +29,9 @@ crx.load().then(function(crx){
 });
 ```
 
-### crx.pack()
+You can optionally pass a `path` argument in lieu of the `rootDirectory` constructor option.
+
+### crx.pack([archiveBuffer])
 
 Packs the Chrome Extension and resolves the promise with a Buffer containing the `.crx` file.
 
@@ -37,6 +39,25 @@ Packs the Chrome Extension and resolves the promise with a Buffer containing the
 crx.pack().then(function(crxBuffer){
   fs.writeFile('/tmp/foobar.crx', crxBuffer);
 });
+```
+
+You can optionally pass an `archiveBuffer` argument if you want a finer grained control over the packing process:
+
+```js
+crx.load()
+  .then(function(){
+    return crx.loadContents();
+  })
+  .then(function(archiveBuffer){
+    fs.writeFile('path/to/extension.zip', archiveBuffer);
+
+    return crx.pack(archiveBuffer);
+  })
+  .then(function(crxBuffer){
+    fs.writeFile('path/to/extension.crx', crxBuffer);
+
+    crx.destroy();
+  });
 ```
 
 ### crx.generateUpdateXML()
@@ -94,11 +115,13 @@ crx.load(join(__dirname, "myFirstExtension"))
 
 ## CLI API
 
-### crx pack [directory] [-f file] [-p private-key]
+### crx pack [directory] [-o file] [--zip-output file] [-p private-key]
 
 Pack the specified directory into a .crx package, and output it to stdout. If no directory is specified, the current working directory is used.
 
-Use the `-f` option to output to a file instead of stdout; if no file is specified, the package is given the same name as the directory basename.
+Use the `-o` option to write the signed extension to a file instead of stdout.
+
+Use the `--zip-output` option to write the unsigned extension to a file.
 
 Use the `-p` option to specify an external private key. If this is not used, `key.pem` is used from within the directory. If this option is not used and no `key.pem` file exists, one will be generated automatically.
 
@@ -107,6 +130,8 @@ Use the `-b` option to specify the maximum buffer allowed to generate extension.
 ### crx keygen [directory]
 
 Generate a 1,024-bit RSA private key within the directory. This is called automatically if a key is not specified, and `key.pem` does not exist.
+
+Use the `--force` option to overwrite an existing private key located in the same given folder.
 
 ### crx -h
 

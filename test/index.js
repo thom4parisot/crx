@@ -2,28 +2,67 @@ var fs = require("fs");
 var test = require("tape");
 var ChromeExtension = require("../");
 var join = require("path").join;
-var crx = new ChromeExtension({
-  privateKey: fs.readFileSync(join(__dirname, "key.pem")),
-  codebase: "http://localhost:8000/myFirstExtension.crx",
-  rootDirectory: join(__dirname, "myFirstExtension")
-});
+var privateKey = fs.readFileSync(join(__dirname, "key.pem"));
+var sinon = require('sinon');
+var sandbox = sinon.sandbox.create();
+
+function newCrx(){
+  return new ChromeExtension({
+    privateKey: privateKey,
+    codebase: "http://localhost:8000/myFirstExtension.crx",
+    rootDirectory: join(__dirname, "myFirstExtension")
+  });
+}
 
 test('it should pack the test extension', function(t){
   t.plan(3);
 
-  crx.pack()
+  var crx = newCrx();
+
+  crx.pack().then(function(packageData){
+    t.ok(packageData instanceof Buffer);
+
+    var updateXML = crx.generateUpdateXML();
+
+    t.ok(updateXML instanceof Buffer);
+
+    fs.writeFile(join(__dirname, "update.xml"), updateXML);
+    fs.writeFile(join(__dirname, "myFirstExtension.crx"), packageData);
+
+    return crx.destroy();
+  })
+  .then(t.pass.bind(t))
+  .catch(t.error.bind(t));
+});
+
+test('it should pack from preloaded contents', function(t){
+  t.plan(3);
+
+  var crx = newCrx();
+  var loadContentsSpy = sandbox.spy(crx, 'loadContents');
+
+  crx.load().then(function(){
+      return crx.loadContents();
+    })
+    .then(function(contentsBuffer){
+      t.ok(contentsBuffer instanceof Buffer);
+
+      return crx.pack(contentsBuffer);
+    })
     .then(function(packageData){
+      t.ok(loadContentsSpy.callCount === 1);
       t.ok(packageData instanceof Buffer);
-
-      var updateXML = crx.generateUpdateXML();
-
-      t.ok(updateXML instanceof Buffer);
-
-      fs.writeFile(join(__dirname, "update.xml"), updateXML);
-      fs.writeFile(join(__dirname, "myFirstExtension.crx"), packageData);
 
       return crx.destroy();
     })
-    .then(t.pass.bind(t))
+    .then(sandbox.restore.bind(sandbox))
     .catch(t.error.bind(t));
+});
+
+test('it should fail if the extension content is loaded without having preliminary called the `load` method', function(t){
+  t.plan(1);
+
+  newCrx().loadContents().catch(function(err){
+    t.ok(err instanceof Error);
+  });
 });
