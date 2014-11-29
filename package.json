@@ -23,7 +23,7 @@
     "archiver": "^0.8.0",
     "commander": "^2.5.0",
     "es6-promise": "^2.0.0",
-    "node-rsa": "^0.1.54",
+    "node-rsa": "^0.2.10",
     "rimraf": "^2.2.8",
     "wrench": "^1.5.0"
   },
