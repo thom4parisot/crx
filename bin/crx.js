@@ -13,7 +13,7 @@ var join = path.join;
 
 var cwd = process.cwd();
 
-program.version(pkg.version)
+program.version(pkg.version);
 // coming soon
 // .option("-x, --xml", "output autoupdate xml instead of extension ")
 
@@ -52,8 +52,8 @@ function keygen (dir, program) {
       }
 
       console.log('%s has been generated in %s', 'key.pem', dir);
-    })
-  })
+    });
+  });
 }
 
 function pack (dir, program) {
