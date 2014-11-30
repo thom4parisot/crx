@@ -129,8 +129,9 @@ ChromeExtension.prototype = {
    * Generates a public key.
    *
    * BC BREAK `this.publicKey` is not stored anymore (since 1.0.0)
+   * BC BREAK callback parameter has been removed in favor to the promise interface.
    *
-   * @returns {Promise}
+   * @returns {Promise} Resolves to {Buffer} containing the public key
    * @example
    *
    * crx.generatePublicKey(function(publicKey){
@@ -261,16 +262,19 @@ ChromeExtension.prototype = {
    * Public key has to be set for this to work, otherwise an error is thrown.
    *
    * BC BREAK `this.appId` is not stored anymore (since 1.0.0)
+   * BC BREAK introduced `publicKey` parameter as it is not stored any more since 2.0.0
    *
+   * @param {Buffer|string} [publicKey] the public key to use to generate the app ID
    * @returns {string}
    */
-  generateAppId: function () {
-    if (typeof this.publicKey !== 'string' && !(this.publicKey instanceof Buffer)) {
-      throw new Error('Public key is not set');
+  generateAppId: function (publicKey) {
+    publicKey = publicKey || this.publicKey;
+    if (typeof publicKey !== 'string' && !(publicKey instanceof Buffer)) {
+      throw new Error('Public key is neither set, nor given');
     }
     return crypto
       .createHash("sha256")
-      .update(this.publicKey)
+      .update(publicKey)
       .digest("hex")
       .slice(0, 32)
       .replace(/./g, function (x) {
