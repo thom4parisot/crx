@@ -280,12 +280,16 @@ ChromeExtension.prototype = {
 
   /**
    * Generates an appId from the publicKey.
+   * Public key has to be set for this to work, otherwise an error is thrown.
    *
    * BC BREAK `this.appId` is not stored anymore (since 1.0.0)
    *
    * @returns {string}
    */
   generateAppId: function () {
+    if (typeof this.publicKey !== 'string' && !(this.publicKey instanceof Buffer)) {
+      throw new Error('Public key is not set');
+    }
     return crypto
       .createHash("sha256")
       .update(this.publicKey)
