@@ -28,8 +28,6 @@ test('it should pack the test extension', function(t){
 
     fs.writeFile(join(__dirname, "update.xml"), updateXML);
     fs.writeFile(join(__dirname, "myFirstExtension.crx"), packageData);
-
-    return crx.destroy();
   })
   .then(t.pass.bind(t))
   .catch(t.error.bind(t));
@@ -52,8 +50,6 @@ test('it should pack from preloaded contents', function(t){
     .then(function(packageData){
       t.ok(loadContentsSpy.callCount === 1);
       t.ok(packageData instanceof Buffer);
-
-      return crx.destroy();
     })
     .then(sandbox.restore.bind(sandbox))
     .catch(t.error.bind(t));
