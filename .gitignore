@@ -2,3 +2,4 @@ test/*.crx
 test/*.zip
 test/*.xml
 node_modules
+tmp
