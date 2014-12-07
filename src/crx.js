@@ -106,22 +106,35 @@ ChromeExtension.prototype = {
    * @returns {Promise}
    */
   load: function (path) {
-    if (!fs.existsSync("tmp")) {
-      fs.mkdirSync("tmp");
-    }
-
     var selfie = this;
 
     return new Promise(function(resolve, reject){
-      wrench.copyDirRecursive(path || selfie.rootDirectory, selfie.path, function (err) {
-        if (err) {
-          return reject(err);
+      var copy = function() {
+        wrench.copyDirRecursive(path || selfie.rootDirectory, selfie.path, function (err) {
+          if (err) {
+            reject(err);
+            return;
+          }
+
+          selfie.manifest = require(join(process.cwd(), selfie.path, "manifest.json"));
+          selfie.loaded = true;
+
+          resolve(selfie);
+        });
+      };
+
+      fs.exists("tmp", function(tmpExists) {
+        if (!tmpExists) {
+          fs.mkdir("tmp", function(err) {
+            if (err) {
+              reject(err);
+              return;
+            }
+            copy();
+          });
+        } else {
+          copy();
         }
-
-        selfie.manifest = require(join(process.cwd(), selfie.path, "manifest.json"));
-        selfie.loaded = true;
-
-        resolve(selfie);
       });
     });
   },
