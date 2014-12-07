@@ -7,8 +7,8 @@ var crypto = require("crypto");
 var RSA = require('node-rsa');
 var wrench = require("wrench");
 var archiver = require("archiver");
-var rm = require('rimraf');
 var Promise = require('es6-promise').Promise;
+var temp = require('temp');
 
 function ChromeExtension(attrs) {
   if ((this instanceof ChromeExtension) !== true) {
@@ -39,29 +39,11 @@ function ChromeExtension(attrs) {
     this[name] = attrs[name];
   }
 
-  this.path = join("tmp", "crx-" + (Math.random() * 1e17).toString(36))
+  temp.track();
+  this.path = temp.mkdirSync('crx');
 }
 
 ChromeExtension.prototype = {
-
-  /**
-   * Destroys generated files.
-   *
-   * @returns {Promise}
-   */
-  destroy: function () {
-    var path = this.path;
-
-    return new Promise(function(resolve, reject){
-      rm(path, function(err){
-        if (err){
-          return reject(err);
-        }
-
-        resolve();
-      });
-    });
-  },
 
   /**
    * Packs the content of the extension in a crx file.
@@ -106,19 +88,15 @@ ChromeExtension.prototype = {
    * @returns {Promise}
    */
   load: function (path) {
-    if (!fs.existsSync("tmp")) {
-      fs.mkdirSync("tmp");
-    }
-
     var selfie = this;
 
     return new Promise(function(resolve, reject){
-      wrench.copyDirRecursive(path || selfie.rootDirectory, selfie.path, function (err) {
+      wrench.copyDirRecursive(path || selfie.rootDirectory, selfie.path, {forceDelete: true}, function (err) {
         if (err) {
           return reject(err);
         }
 
-        selfie.manifest = require(join(process.cwd(), selfie.path, "manifest.json"));
+        selfie.manifest = require(join(selfie.path, "manifest.json"));
         selfie.loaded = true;
 
         resolve(selfie);

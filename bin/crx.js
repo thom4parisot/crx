@@ -99,8 +99,6 @@ function pack (dir, program) {
       .then(function (crxBuffer) {
 	var outFile = resolve(cwd, program.output);
 	(outFile ? fs.createWriteStream(outFile) : process.stdout).end(crxBuffer);
-
-	return crx.destroy();
       });
   });
 }
