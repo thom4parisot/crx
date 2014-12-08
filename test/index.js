@@ -66,5 +66,5 @@ test('it should fail if the extension content is loaded without having prelimina
 test('it should fail if the public key was not set prior to trying to generate the app ID', function(t) {
   t.plan(1);
   var crx = newCrx();
-  t.throws(function() { crx.generateAppId(); }, /Public key is not set/);
+  t.throws(function() { crx.generateAppId(); }, /Public key is neither set, nor given/);
 });
