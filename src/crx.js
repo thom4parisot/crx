@@ -142,7 +142,17 @@ ChromeExtension.prototype = {
     var privateKey = this.privateKey;
 
     return new Promise(function(resolve, reject){
-      var key = new RSA(privateKey, 'pkcs1-private-pem');
+      // Chrome generates private keys in pkcs8 format
+      // see https://www.npmjs.com/package/node-rsa
+      try {
+        var key = new RSA(privateKey, 'pkcs1-private-pem');
+      } catch (e) {
+        if (e.message === 'encoding too long') {
+          var key = new RSA(privateKey, 'pkcs8-private-pem');
+        } else {
+          throw e;
+        }
+      }
 
       resolve(key.exportKey('pkcs8-public-der'));
     });
