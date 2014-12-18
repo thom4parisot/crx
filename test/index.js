@@ -1,3 +1,6 @@
+/* global require, __dirname, Buffer */
+'use strict';
+
 var fs = require("fs");
 var test = require("tape");
 var ChromeExtension = require("../");

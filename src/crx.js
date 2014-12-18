@@ -1,3 +1,4 @@
+/* global require, process, Buffer, module */
 'use strict';
 
 var fs = require("fs");
@@ -181,7 +182,7 @@ ChromeExtension.prototype = {
       var allFiles = [];
 
       if (!selfie.loaded) {
-	throw new Error('crx.load needs to be called first in order to prepare the workspace.')
+	throw new Error('crx.load needs to be called first in order to prepare the workspace.');
       }
 
       // the callback is called many times
@@ -244,7 +245,7 @@ ChromeExtension.prototype = {
 
     var crx = new Buffer(length);
 
-    crx.write("Cr24" + Array(13).join("\x00"), "binary");
+    crx.write("Cr24" + new Array(13).join("\x00"), "binary");
 
     crx[4] = 2;
     crx.writeUInt32LE(keyLength, 8);
@@ -294,7 +295,7 @@ ChromeExtension.prototype = {
       throw new Error("No URL provided for update.xml.");
     }
 
-    return Buffer(
+    return new Buffer(
       "<?xml version='1.0' encoding='UTF-8'?>\n" +
       "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
       "  <app appid='" + (this.appId || this.generateAppId()) + "'>\n" +
