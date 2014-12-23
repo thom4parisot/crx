@@ -55,8 +55,6 @@ crx.load()
   })
   .then(function(crxBuffer){
     fs.writeFile('path/to/extension.crx', crxBuffer);
-
-    crx.destroy();
   });
 ```
 
@@ -72,20 +70,6 @@ crx.pack().then(function(crxBuffer){
 
   var xmlBuffer = crx.generateUpdateXML();
   fs.writeFile('/foo/bar/update.xml', xmlBuffer);
-});
-```
-
-### crx.destroy()
-
-Destroys all of the temporary resources used for packing.
-
-```js
-crx.pack().then(function(crxBuffer){
-  // ...
-
-  return crx.destroy();
-}).then(function(){
-  console.log('Extension saved and workspace cleaned up!');
 });
 ```
 
@@ -107,8 +91,6 @@ crx.load(join(__dirname, "myFirstExtension"))
 
       fs.writeFile(join(__dirname, "update.xml"), updateXML)
       fs.writeFile(join(__dirname, "myFirstExtension.crx"), crxBuffer)
-
-      return crx.destroy();
     })
   });
 ```
