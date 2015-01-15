@@ -3,6 +3,7 @@
 var path = require("path");
 var fs = require("fs");
 var rsa = require('node-rsa');
+var Promise = require('es6-promise').Promise;
 
 var program = require("commander");
 var ChromeExtension = require("..");
@@ -34,8 +35,47 @@ program
 
 program.parse(process.argv);
 
+/**
+ * Read a specified key file from disk
+ * @param {String} keyPath path to the key to read
+ * @returns {Promise}
+ */
+function readKeyFile(keyPath) {
+  return new Promise(function (resolve, reject) {
+    fs.readFile(keyPath, function (err, data) {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+
+/**
+ * Generate a new key file
+ * @param {String} keyPath path of the key file to create
+ * @returns {Promise}
+ */
+function generateKeyFile(keyPath) {
+  return new Promise(function(resolve, reject) {
+    var key = new rsa({b: 1024}),
+        keyVal = key.exportKey('pkcs1-private-pem');
+
+    fs.writeFile(keyPath, keyVal, function(err){
+      if (err) {
+        throw err;
+      }
+
+      console.log('Key file has been generated at %s', keyPath);
+
+      resolve(keyVal);
+    });
+  });
+}
+
 function keygen (dir, program) {
-  dir = resolve(cwd, dir);
+  dir = dir ? resolve(cwd, dir) : cwd;
 
   var keyPath = join(dir, "key.pem");
 
@@ -44,21 +84,14 @@ function keygen (dir, program) {
       throw new Error('key.pem already exists in the given location.');
     }
 
-    var key = new rsa({b: 1024});
-
-    fs.writeFile(keyPath, key.exportKey('pkcs1-private-pem'), function(err){
-      if (err){
-        throw err;
-      }
-
-      console.log('%s has been generated in %s', 'key.pem', dir);
-    });
+    generateKeyFile(keyPath);
   });
 }
 
 function pack (dir, program) {
-  var input = resolve(cwd, dir);
-  var key = program.privateKey ? resolve(cwd, program.privateKey) : join(input, "key.pem");
+  var input = dir ? resolve(cwd, dir) : cwd;
+  var keyPath = program.privateKey ? resolve(cwd, program.privateKey) : join(input, "key.pem");
+  var output;
 
   if (program.output) {
     if (path.extname(program.output) !== '.crx') {
@@ -77,28 +110,40 @@ function pack (dir, program) {
     maxBuffer:     program.maxBuffer
   });
 
-  fs.readFile(key, function (err, data) {
-    if (err) {
+  readKeyFile(keyPath).then(null, function (err) {
+    // If the key file doesn't exist, create one
+    if (err.code === 'ENOENT') {
+      return generateKeyFile(keyPath);
+    } else {
       throw err;
     }
-
-    crx.privateKey = data;
-
+  }).then(function (key) {
+    crx.privateKey = key;
+  }).then(function () {
     crx.load().then(function () {
       return crx.loadContents();
-    })
-      .then(function (zipBuffer) {
-	if (program.zipOutput) {
-	  var outFile = resolve(cwd, program.zipOutput);
+    }).then(function (zipBuffer) {
 
-	  fs.createWriteStream(outFile).end(zipBuffer);
-	}
+      if (program.zipOutput) {
+        var outFile = resolve(cwd, program.zipOutput);
 
-	return crx.pack(zipBuffer);
-      })
-      .then(function (crxBuffer) {
-	var outFile = resolve(cwd, program.output);
-	(outFile ? fs.createWriteStream(outFile) : process.stdout).end(crxBuffer);
-      });
+        fs.createWriteStream(outFile).end(zipBuffer);
+      }
+
+      return crx.pack(zipBuffer);
+    }).then(function (crxBuffer) {
+
+      if (program.output) {
+        output = program.output;
+      } else {
+        output = path.basename(cwd) + '.crx';
+      }
+
+      var outFile = resolve(cwd, output);
+      (outFile ? fs.createWriteStream(outFile) : process.stdout).end(crxBuffer);
+    }).then(function () {
+      console.log('%s has been generated in %s', output, cwd);
+    });
   });
+
 }
