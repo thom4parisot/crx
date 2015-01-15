@@ -145,7 +145,7 @@ ChromeExtension.prototype = {
     var privateKey = this.privateKey;
 
     return new Promise(function(resolve, reject){
-      var key = new RSA(privateKey, 'pkcs1-private-pem');
+      var key = new RSA(privateKey, 'pkcs8-private-pem');
 
       resolve(key.exportKey('pkcs8-public-der'));
     });
