@@ -2,7 +2,7 @@
   "author": "Jed Schmidt <tr@nslator.jp> (http://jed.is)",
   "name": "crx",
   "description": "Build Google Chrome extensions with node.js",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "homepage": "https://github.com/oncletom/crx",
   "bin": {
     "crx": "./bin/crx.js"
