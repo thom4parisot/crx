@@ -86,7 +86,7 @@ var crx = new ChromeExtension(
 
 crx.load(join(__dirname, "myFirstExtension"))
   .then(function() {
-    return crx.pack(function(crxBuffer){
+    return crx.pack().then(function(crxBuffer){
       var updateXML = crx.generateUpdateXML()
 
       fs.writeFile(join(__dirname, "update.xml"), updateXML)
