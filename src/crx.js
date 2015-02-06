@@ -217,7 +217,11 @@ ChromeExtension.prototype = {
         // TODO: Buffer concat could be a problem when building a big extension.
         //       So ideally only the 'finish' callback must be used.
         archive.on('readable', function () {
-          contents = Buffer.concat([contents, archive.read()]);
+          var buf = archive.read();
+
+          if (buf) {
+            contents = Buffer.concat([contents, buf]);
+          }
         });
 
         archive.on('finish', function () {
