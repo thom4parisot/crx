@@ -3,6 +3,7 @@
   "name": "crx",
   "description": "Build Google Chrome extensions with node.js",
   "version": "3.0.2",
+  "license": "MIT",
   "homepage": "https://github.com/oncletom/crx",
   "bin": {
     "crx": "./bin/crx.js"
@@ -13,12 +14,15 @@
   },
   "main": "./src/crx.js",
   "engines": {
-    "node": ">=0.7.12",
+    "node": ">=0.10",
     "iojs": ">=1.0.0 <2.0.0",
-    "npm": ">=1.4.6"
+    "npm": ">=2.13.0"
   },
   "scripts": {
-    "test": "node ./test/index.js"
+    "test": "node ./test/index.js",
+    "preversion": "npm test",
+    "version": "npm run changelog && git add CHANGELOG.md",
+    "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version} -a --only-pulls --use-commit-body"
   },
   "dependencies": {
     "archiver": "^0.8.0",
@@ -29,6 +33,7 @@
     "wrench": "^1.5.0"
   },
   "devDependencies": {
+    "github-changes": "^1.0.0",
     "sinon": "^1.12.1",
     "tape": "^3.0.3"
   }
