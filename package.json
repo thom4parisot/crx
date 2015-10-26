@@ -28,6 +28,7 @@
     "archiver": "^0.8.0",
     "commander": "^2.5.0",
     "es6-promise": "^2.0.0",
+    "gitignore-parser": "0.0.2",
     "node-rsa": "^0.2.10",
     "temp": "^0.8.1",
     "wrench": "^1.5.0"
