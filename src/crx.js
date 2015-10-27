@@ -188,7 +188,10 @@ ChromeExtension.prototype = {
 	      throw new Error('crx.load needs to be called first in order to prepare the workspace.');
       }
 
-      var crxignore = gitignoreParser.compile(fs.readFileSync(selfie.path + '/.crxignore', 'utf8'))
+      var crxignore = null
+      try {
+        crxignore = gitignoreParser.compile(fs.readFileSync(selfie.path + '/.crxignore', 'utf8'))
+      } catch (e) {}
 
       // the callback is called many times
       // when 'files' is null, it means we accumulated everything
@@ -205,7 +208,7 @@ ChromeExtension.prototype = {
         }
 
         allFiles.filter(function (file) {
-          return crxignore.accepts(file) || file === '.crxignore'
+          return !crxignore || crxignore.accepts(file) || file === '.crxignore'
         }).forEach(function (file) {
           var filePath = join(selfie.path, file);
           var stat = fs.statSync(filePath);
