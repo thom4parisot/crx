@@ -8,6 +8,7 @@ var join = require("path").join;
 var privateKey = fs.readFileSync(join(__dirname, "key.pem"));
 var sinon = require('sinon');
 var sandbox = sinon.sandbox.create();
+var AdmZip = require('adm-zip');
 
 function newCrx(){
   return new ChromeExtension({
@@ -70,4 +71,23 @@ test('it should fail if the public key was not set prior to trying to generate t
   t.plan(1);
   var crx = newCrx();
   t.throws(function() { crx.generateAppId(); }, /Public key is neither set, nor given/);
+});
+
+test('it should not archive paths listed in .crxignore', function(t) {
+  var crx = newCrx();
+  var testIgnore = ["ignore.js", "ignore-dir/file.js"];
+
+  t.plan(testIgnore.length);
+
+  crx.load().then(function(){
+    return crx.loadContents();
+  })
+  .then(function(zipBuffer){
+    var zipOutputPath = join(__dirname, "output.zip");
+
+    fs.writeFile(zipOutputPath, zipBuffer, function(){
+      var zip = new AdmZip(zipOutputPath);
+      testIgnore.forEach(function(file){ t.ok(zip.getEntry(file) === null); });
+    });
+  });
 });

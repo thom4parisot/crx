@@ -28,11 +28,13 @@
     "archiver": "^0.8.0",
     "commander": "^2.5.0",
     "es6-promise": "^2.0.0",
+    "ignore": "^2.2.19",
     "node-rsa": "^0.2.10",
     "temp": "^0.8.1",
     "wrench": "^1.5.0"
   },
   "devDependencies": {
+    "adm-zip": "^0.4.7",
     "github-changes": "^1.0.0",
     "sinon": "^1.12.1",
     "tape": "^3.0.3"
