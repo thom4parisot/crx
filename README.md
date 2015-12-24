@@ -111,7 +111,7 @@ Use the `-b` option to specify the maximum buffer allowed to generate extension.
 
 ### crx keygen [directory]
 
-Generate a 1,024-bit RSA private key within the directory. This is called automatically if a key is not specified, and `key.pem` does not exist.
+Generate a 2048-bit RSA private key within the directory. This is called automatically if a key is not specified, and `key.pem` does not exist.
 
 Use the `--force` option to overwrite an existing private key located in the same given folder.
 
