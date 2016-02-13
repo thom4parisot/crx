@@ -59,7 +59,7 @@ function readKeyFile(keyPath) {
  */
 function generateKeyFile(keyPath) {
   return new Promise(function(resolve, reject) {
-    var key = new rsa({b: 1024}),
+    var key = new rsa({b: 2048}),
         keyVal = key.exportKey('pkcs1-private-pem');
 
     fs.writeFile(keyPath, keyVal, function(err){
