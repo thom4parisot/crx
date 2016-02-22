@@ -99,7 +99,12 @@ ChromeExtension.prototype = {
           return reject(err);
         }
 
-        selfie.manifest = require(join(selfie.path, "manifest.json"));
+        try {
+          selfie.manifest = require(join(selfie.path, "manifest.json"));
+        }
+        catch(ex) {
+          return reject(ex);
+        }
         selfie.loaded = true;
 
         resolve(selfie);
