@@ -130,7 +130,7 @@ Given the following directory structure:
 run this:
 
     cd myFirstExtension
-    crx pack -f
+    crx pack -o
 
 to generate this:
 
@@ -143,7 +143,7 @@ to generate this:
 You can also name the output file like this:
 
     cd myFirstExtension
-    crx pack -f myFirstExtension.crx
+    crx pack -o myFirstExtension.crx
 
 to get the same results, or also pipe to the file manually like this.
 
@@ -159,7 +159,7 @@ As you can see a key is generated for you at `key.pem` if none exists. You can a
 
 you can run this:
 
-    crx pack myFirstExtension -p myPrivateKey.pem -f
+    crx pack myFirstExtension -p myPrivateKey.pem -o
 
 to sign your package without keeping the key in the directory.
 
