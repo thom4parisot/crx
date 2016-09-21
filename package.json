@@ -19,9 +19,8 @@
   },
   "scripts": {
     "test": "node ./test/index.js",
-    "preversion": "npm test",
     "version": "npm run changelog && git add CHANGELOG.md",
-    "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version} -a --only-pulls --use-commit-body"
+    "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version}  --only-pulls --use-commit-body"
   },
   "dependencies": {
     "archiver": "^1.1.0",

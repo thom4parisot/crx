@@ -1,11 +1,18 @@
 language: node_js
 node_js:
-  - '0.10'
-  - '0.12'
-  - 'iojs'
-  - '4.1'
-  - '5.0'
-  - '6'
-  - 'node'
-
+- '0.10'
+- '0.12'
+- iojs
+- v4
+- v5
+- v6
+- node
 sudo: false
+deploy:
+  provider: npm
+  email: hi@oncletom.io
+  api_key:
+    secure: UdhueW/+siuza1tueKlmLfyCxeqXB2Si53mDjz56ZXnW2rDdmBZuzHYE7IFn1u2Le2v+Eu+grGF7v9iGgEuIxMIa0JR+3Q55mZnMKHl+29fkaydq1hJgJH9wIXRu+1wistlnviK+N6fM5zt/H5taVXVV0yO/aAGgOwaFVqb1yrk=
+  on:
+    tags: true
+    repo: oncletom/crx
