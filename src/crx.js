@@ -8,6 +8,7 @@ var crypto = require("crypto");
 var RSA = require('node-rsa');
 var wrench = require("wrench");
 var archiver = require("archiver");
+var ignore = require("ignore");
 var Promise = require('es6-promise').Promise;
 var temp = require('temp');
 
@@ -179,6 +180,18 @@ ChromeExtension.prototype = {
     var archive = archiver("zip");
     var selfie = this;
 
+    var getCrxignore = function () {
+      return new Promise(function (resolve) {
+        fs.readFile(selfie.path + '/.crxignore', 'utf8', function(err, data){
+          var ig = ignore({
+            ignore: data ? data.split(/\r?\n/) : [],
+            twoGlobstars: true
+          });
+          resolve(ig.createFilter());
+        });
+      });
+    };
+
     return new Promise(function(resolve, reject){
       var contents = new Buffer('');
       var allFiles = [];
@@ -187,48 +200,50 @@ ChromeExtension.prototype = {
 	      throw new Error('crx.load needs to be called first in order to prepare the workspace.');
       }
 
-      // the callback is called many times
-      // when 'files' is null, it means we accumulated everything
-      // hence this weird setup
-      wrench.readdirRecursive(selfie.path, function(err, files){
-        if (err){
-          return reject(err);
-        }
-
-        // stack unless 'files' is null
-        if (files){
-          allFiles = allFiles.concat(files);
-          return;
-        }
-
-        allFiles.forEach(function (file) {
-          var filePath = join(selfie.path, file);
-          var stat = fs.statSync(filePath);
-
-          if (stat.isFile() && file !== "key.pem") {
-            archive.append(fs.createReadStream(filePath), { name: file });
+      getCrxignore().then(function(crxignore){
+        // the callback is called many times
+        // when 'files' is null, it means we accumulated everything
+        // hence this weird setup
+        wrench.readdirRecursive(selfie.path, function(err, files){
+          if (err){
+            return reject(err);
           }
-        });
 
-        archive.finalize();
-
-        // Relates to the issue: "Event 'finished' no longer valid #18"
-        // https://github.com/jed/crx/issues/18
-        // TODO: Buffer concat could be a problem when building a big extension.
-        //       So ideally only the 'finish' callback must be used.
-        archive.on('readable', function () {
-          var buf = archive.read();
-
-          if (buf) {
-            contents = Buffer.concat([contents, buf]);
+          // stack unless 'files' is null
+          if (files){
+            allFiles = allFiles.concat(files);
+            return;
           }
-        });
 
-        archive.on('finish', function () {
-          resolve(contents);
-        });
+          allFiles.filter(crxignore).forEach(function (file) {
+            var filePath = join(selfie.path, file);
+            var stat = fs.statSync(filePath);
 
-        archive.on("error", reject);
+            if (stat.isFile() && file !== "key.pem") {
+              archive.append(fs.createReadStream(filePath), { name: file });
+            }
+          });
+
+          archive.finalize();
+
+          // Relates to the issue: "Event 'finished' no longer valid #18"
+          // https://github.com/jed/crx/issues/18
+          // TODO: Buffer concat could be a problem when building a big extension.
+          //       So ideally only the 'finish' callback must be used.
+          archive.on('readable', function () {
+            var buf = archive.read();
+
+            if (buf) {
+              contents = Buffer.concat([contents, buf]);
+            }
+          });
+
+          archive.on('finish', function () {
+            resolve(contents);
+          });
+
+          archive.on("error", reject);
+        });
       });
     });
   },

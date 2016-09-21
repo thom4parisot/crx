@@ -33,6 +33,11 @@ program
   .option("-b, --max-buffer <total>", "max amount of memory allowed to generate the crx, in byte")
   .action(pack);
 
+program
+  .command("ignore <patterns...>")
+  .description("add patterns to a .crxignore file")
+  .action(addPatterns);
+
 program.parse(process.argv);
 
 /**
@@ -146,4 +151,13 @@ function pack (dir, program) {
     });
   });
 
+}
+
+function addPatterns (patterns) {
+  console.log("Adding pattern(s) to .crxignore");
+  var crxignorePath = join(cwd, ".crxignore");
+  patterns.forEach(function (pattern) {
+    console.log("... adding " + pattern);
+    fs.appendFile(crxignorePath, pattern + "\n");
+  });
 }
