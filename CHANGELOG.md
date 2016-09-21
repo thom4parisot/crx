@@ -1,6 +1,12 @@
 ## Change Log
 
-### 3.0.3 (2015/07/22 16:10 +00:00)
+### 3.0.4 (2016/09/21 13:00 +00:00)
+- [#58](https://github.com/oncletom/crx/pull/58) [security fix] Updated archiver dependency; drops support for node 0.8.x (@PavelVanecek)
+- [#56](https://github.com/oncletom/crx/pull/56) Update CLI documentation with -o instead of deprecated -f (@nhoizey)
+- [#52](https://github.com/oncletom/crx/pull/52) Generate 2048-bit keys at the keygen CLI (@ngyikp)
+- [#50](https://github.com/oncletom/crx/pull/50) test crx on node 4.1 and 5 (@joscha)
+
+### v3.0.3 (2015/07/22 16:10 +00:00)
 - [#47](https://github.com/oncletom/crx/pull/47) added .npmignore file (@PavelVanecek)
 
 ### v3.0.2 (2015/02/06 11:28 +00:00)
