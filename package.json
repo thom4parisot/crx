@@ -15,8 +15,7 @@
   "main": "./src/crx.js",
   "engines": {
     "node": ">=0.10",
-    "iojs": ">=1.0.0 <2.0.0",
-    "npm": ">=2.13.0"
+    "iojs": ">=1.0.0 <2.0.0"
   },
   "scripts": {
     "test": "node ./test/index.js",

@@ -54,7 +54,9 @@ test('it should pack from preloaded contents', function(t){
       t.ok(loadContentsSpy.callCount === 1);
       t.ok(packageData instanceof Buffer);
     })
-    .then(sandbox.restore.bind(sandbox))
+    .then(function() {
+      sandbox.restore();
+    })
     .catch(t.error.bind(t));
 });
 
