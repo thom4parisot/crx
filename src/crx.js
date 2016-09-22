@@ -5,11 +5,9 @@ var fs = require("fs");
 var path = require("path");
 var join = path.join;
 var crypto = require("crypto");
-var RSA = require('node-rsa');
-var wrench = require("wrench");
+var RSA = require("node-rsa");
 var archiver = require("archiver");
-var Promise = require('es6-promise').Promise;
-var temp = require('temp');
+var Promise = require("es6-promise").Promise;
 
 function ChromeExtension(attrs) {
   if ((this instanceof ChromeExtension) !== true) {
@@ -21,10 +19,6 @@ function ChromeExtension(attrs) {
    */
   this.appId = null;
 
-  this.manifest = '';
-
-  this.loaded = false;
-
   this.rootDirectory = '';
 
   this.publicKey = null;
@@ -33,6 +27,8 @@ function ChromeExtension(attrs) {
 
   this.codebase = null;
 
+  this.path = null;
+
   /*
   Copying attributes
    */
@@ -40,8 +36,7 @@ function ChromeExtension(attrs) {
     this[name] = attrs[name];
   }
 
-  temp.track();
-  this.path = temp.mkdirSync('crx');
+  this.loaded = false;
 }
 
 ChromeExtension.prototype = {
@@ -66,8 +61,7 @@ ChromeExtension.prototype = {
     var selfie = this;
     var packP = [
       this.generatePublicKey(),
-      contentsBuffer || selfie.loadContents(),
-      this.writeFile("manifest.json", JSON.stringify(selfie.manifest))
+      contentsBuffer || selfie.loadContents()
     ];
 
     return Promise.all(packP).then(function(outputs){
@@ -92,22 +86,19 @@ ChromeExtension.prototype = {
     var selfie = this;
 
     return new Promise(function(resolve, reject){
-      wrench.copyDirRecursive(path || selfie.rootDirectory, selfie.path, {forceDelete: true}, function (err) {
-        if (err) {
-          return reject(err);
-        }
+      selfie.path = path || selfie.rootDirectory;
 
-        selfie.manifest = require(join(selfie.path, "manifest.json"));
-        selfie.loaded = true;
+      selfie.manifest = require(join(selfie.path, "manifest.json"));
+      selfie.loaded = true;
 
-        resolve(selfie);
-      });
+      resolve(selfie);
     });
   },
 
   /**
    * Writes data into the extension workable directory.
    *
+   * @deprecated
    * @param {string} path
    * @param {*} data
    * @returns {Promise}
@@ -115,6 +106,7 @@ ChromeExtension.prototype = {
   writeFile: function (path, data) {
     var absPath = join(this.path, path);
 
+    /* istanbul ignore next */
     return new Promise(function(resolve, reject){
       fs.writeFile(absPath, data, function (err) {
         if (err) {
@@ -174,60 +166,40 @@ ChromeExtension.prototype = {
    * @returns {Promise}
    */
   loadContents: function () {
-    var archive = archiver("zip");
     var selfie = this;
 
     return new Promise(function(resolve, reject){
+      var archive = archiver('zip');
       var contents = new Buffer('');
-      var allFiles = [];
 
       if (!selfie.loaded) {
 	      throw new Error('crx.load needs to be called first in order to prepare the workspace.');
       }
 
-      // the callback is called many times
-      // when 'files' is null, it means we accumulated everything
-      // hence this weird setup
-      wrench.readdirRecursive(selfie.path, function(err, files){
-        if (err){
-          return reject(err);
-        }
+      archive.on('error', reject);
 
-        // stack unless 'files' is null
-        if (files){
-          allFiles = allFiles.concat(files);
-          return;
-        }
+      /*
+        TODO: Remove in v4.
+        It will be better to resolve an archive object
+        rather than fitting everything in memory.
 
-        allFiles.forEach(function (file) {
-          var filePath = join(selfie.path, file);
-          var stat = fs.statSync(filePath);
-
-          if (stat.isFile() && file !== "key.pem") {
-            archive.append(fs.createReadStream(filePath), { name: file });
-          }
-        });
-
-        archive.finalize();
-
-        // Relates to the issue: "Event 'finished' no longer valid #18"
-        // https://github.com/jed/crx/issues/18
-        // TODO: Buffer concat could be a problem when building a big extension.
-        //       So ideally only the 'finish' callback must be used.
-        archive.on('readable', function () {
-          var buf = archive.read();
-
-          if (buf) {
-            contents = Buffer.concat([contents, buf]);
-          }
-        });
-
-        archive.on('finish', function () {
-          resolve(contents);
-        });
-
-        archive.on("error", reject);
+        @see https://github.com/oncletom/crx/issues/61
+      */
+      archive.on('data', function (buf) {
+        contents = Buffer.concat([contents, buf]);
       });
+
+      archive.on('finish', function () {
+        resolve(contents);
+      });
+
+      archive
+        .glob('**', {
+          cwd: selfie.path,
+          matchBase: true,
+          ignore: ['*.pem', '.git', '*.crx']
+        })
+        .finalize();
     });
   },
 

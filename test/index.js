@@ -3,16 +3,16 @@
 
 var fs = require("fs");
 var test = require("tape");
+var Zip = require("adm-zip");
 var ChromeExtension = require("../");
 var join = require("path").join;
 var privateKey = fs.readFileSync(join(__dirname, "key.pem"));
 var updateXml = fs.readFileSync(join(__dirname, "expectations", "update.xml"));
-var sinon = require('sinon');
-var sandbox = sinon.sandbox.create();
 
 function newCrx(){
   return new ChromeExtension({
     privateKey: privateKey,
+    path: '/tmp',
     codebase: "http://localhost:8000/myFirstExtension.crx",
     rootDirectory: join(__dirname, "myFirstExtension")
   });
@@ -45,21 +45,42 @@ test('#pack', function(t){
   .catch(t.error.bind(t));
 });
 
+test('#writeFile', function(t){
+  t.plan(1);
+
+  var crx = newCrx();
+
+  crx.writeFile('/tmp/crx', new Error('')).catch(function(err){
+    t.ok(err);
+  });
+});
+
 test('#loadContents', function(t){
   t.plan(2);
 
   var crx = newCrx();
-  var loadContentsSpy = sandbox.spy(crx, 'loadContents');
 
   crx.load().then(function(){
     return crx.loadContents();
   })
   .then(function(contentsBuffer){
     t.ok(contentsBuffer instanceof Buffer);
-    t.ok(loadContentsSpy.callCount === 1);
+
+    return contentsBuffer;
   })
-  .then(function() {
-    sandbox.restore();
+  .then(function(packageData){
+    var entries = new Zip(packageData)
+      .getEntries()
+      .map(function(entry){
+        return entry.entryName;
+      })
+      .sort(function(a, b){
+        return a.localeCompare(b);
+      });
+
+    t.deepEqual(entries, ['icon.png', 'manifest.json']);
+
+    return packageData;
   })
   .catch(t.error.bind(t));
 });
