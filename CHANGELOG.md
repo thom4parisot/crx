@@ -1,6 +1,10 @@
 ## Change Log
 
-### 3.0.4 (2016/09/21 13:00 +00:00)
+### 3.1.0 (2016/09/22 14:06 +00:00)
+- [#62](https://github.com/oncletom/crx/pull/62) Remove intermediate copy and use of temporary files (@oncletom)
+- [#63](https://github.com/oncletom/crx/pull/63) Add code coverage and add additional tests (@oncletom)
+
+### v3.0.4 (2016/09/21 13:00 +00:00)
 - [#58](https://github.com/oncletom/crx/pull/58) [security fix] Updated archiver dependency; drops support for node 0.8.x (@PavelVanecek)
 - [#56](https://github.com/oncletom/crx/pull/56) Update CLI documentation with -o instead of deprecated -f (@nhoizey)
 - [#52](https://github.com/oncletom/crx/pull/52) Generate 2048-bit keys at the keygen CLI (@ngyikp)
