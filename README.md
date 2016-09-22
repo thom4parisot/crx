@@ -43,12 +43,20 @@ crx.load("./myFirstExtension"))
 
 This module exports the `ChromeExtension` constructor directly, which can take an optional attribute object, which is used to extend the instance.
 
-### crx.load(path)
+### crx.load(path|files)
 
-Prepares the temporary workspace for the Chrome Extension located at `path`.
+Prepares the temporary workspace for the Chrome Extension located at `path` — which is expected to directly contain `manifest.json`.
 
 ```js
 crx.load('/path/to/extension').then(crx => {
+  // ...
+});
+```
+
+Alternatively, you can pass a list of files — the first `manifest.json` file to be found will be considered as the root of the application.
+
+```js
+crx.load(['/my/extension/manifest.json', '/my/extension/background.json']).then(crx => {
   // ...
 });
 ```
