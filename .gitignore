@@ -2,4 +2,6 @@ test/*.crx
 test/*.zip
 test/*.xml
 node_modules
+coverage
+.nyc_output
 tmp

@@ -18,9 +18,19 @@
     "iojs": ">=1.0.0 <2.0.0"
   },
   "scripts": {
-    "test": "node ./test/index.js",
+    "test": "nyc tape ./test/*.js",
+    "posttest": "nyc report --reporter=html",
     "version": "npm run changelog && git add CHANGELOG.md",
     "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version}  --only-pulls --use-commit-body"
+  },
+  "nyc": {
+    "functions": 100,
+    "statements": 95,
+    "branches": 88,
+    "check-coverage": true,
+    "reporter": [
+      "text"
+    ]
   },
   "dependencies": {
     "archiver": "^1.1.0",
@@ -32,6 +42,7 @@
   },
   "devDependencies": {
     "github-changes": "^1.0.0",
+    "nyc": "^8.3.0",
     "sinon": "^1.12.1",
     "tape": "^3.0.3"
   }

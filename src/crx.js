@@ -79,8 +79,6 @@ ChromeExtension.prototype = {
       var signature = selfie.generateSignature(contents);
 
       return selfie.generatePackage(signature, publicKey, contents);
-    }, function (err) {
-      throw new Error(err.toString());
     });
   },
 
