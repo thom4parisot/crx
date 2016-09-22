@@ -195,7 +195,7 @@ ChromeExtension.prototype = {
         .glob('**', {
           cwd: selfie.path,
           matchBase: true,
-          ignore: ['*.pem', '.git']
+          ignore: ['*.pem', '.git', '*.crx']
         })
         .finalize();
     });
