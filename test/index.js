@@ -58,11 +58,14 @@ test('#loadContents', function(t){
     return contentsBuffer;
   })
   .then(function(packageData){
-    const entries = new Zip(packageData)
-    .getEntries()
-    .map(function(entry){
-      return entry.entryName;
-    });
+    var entries = new Zip(packageData)
+      .getEntries()
+      .map(function(entry){
+        return entry.entryName;
+      })
+      .sort(function(a, b){
+        return a.localeCompare(b);
+      });
 
     t.deepEqual(entries, ['icon.png', 'manifest.json']);
 
