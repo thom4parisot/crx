@@ -12,6 +12,7 @@ var updateXml = fs.readFileSync(join(__dirname, "expectations", "update.xml"));
 function newCrx(){
   return new ChromeExtension({
     privateKey: privateKey,
+    path: '/tmp',
     codebase: "http://localhost:8000/myFirstExtension.crx",
     rootDirectory: join(__dirname, "myFirstExtension")
   });
@@ -42,6 +43,16 @@ test('#pack', function(t){
     t.ok(packageData instanceof Buffer);
   })
   .catch(t.error.bind(t));
+});
+
+test('#writeFile', function(t){
+  t.plan(1);
+
+  var crx = newCrx();
+
+  crx.writeFile('/tmp/crx', new Error('')).catch(function(err){
+    t.ok(err);
+  });
 });
 
 test('#loadContents', function(t){

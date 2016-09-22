@@ -27,6 +27,8 @@ function ChromeExtension(attrs) {
 
   this.codebase = null;
 
+  this.path = null;
+
   /*
   Copying attributes
    */
@@ -35,7 +37,6 @@ function ChromeExtension(attrs) {
   }
 
   this.loaded = false;
-  this.path = null;
 }
 
 ChromeExtension.prototype = {
@@ -105,6 +106,7 @@ ChromeExtension.prototype = {
   writeFile: function (path, data) {
     var absPath = join(this.path, path);
 
+    /* istanbul ignore next */
     return new Promise(function(resolve, reject){
       fs.writeFile(absPath, data, function (err) {
         if (err) {
