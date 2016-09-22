@@ -145,5 +145,6 @@ function pack (dir, program) {
       console.log('%s has been generated in %s', output, cwd);
     });
   });
-
 }
+
+module.exports = program;

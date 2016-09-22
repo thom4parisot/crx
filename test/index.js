@@ -6,6 +6,7 @@ var test = require("tape");
 var ChromeExtension = require("../");
 var join = require("path").join;
 var privateKey = fs.readFileSync(join(__dirname, "key.pem"));
+var updateXml = fs.readFileSync(join(__dirname, "expectations", "update.xml"));
 var sinon = require('sinon');
 var sandbox = sinon.sandbox.create();
 
@@ -17,50 +18,15 @@ function newCrx(){
   });
 }
 
-test('it should pack the test extension', function(t){
-  t.plan(3);
+test('#ChromeExtension', function(t){
+  t.plan(2);
 
-  var crx = newCrx();
-
-  crx.pack().then(function(packageData){
-    t.ok(packageData instanceof Buffer);
-
-    var updateXML = crx.generateUpdateXML();
-
-    t.ok(updateXML instanceof Buffer);
-
-    fs.writeFile(join(__dirname, "update.xml"), updateXML);
-    fs.writeFile(join(__dirname, "myFirstExtension.crx"), packageData);
-  })
-  .then(t.pass.bind(t))
-  .catch(t.error.bind(t));
+  t.ok(ChromeExtension({}) instanceof ChromeExtension);
+  t.ok(newCrx());
 });
 
-test('it should pack from preloaded contents', function(t){
-  t.plan(3);
 
-  var crx = newCrx();
-  var loadContentsSpy = sandbox.spy(crx, 'loadContents');
-
-  crx.load().then(function(){
-      return crx.loadContents();
-    })
-    .then(function(contentsBuffer){
-      t.ok(contentsBuffer instanceof Buffer);
-
-      return crx.pack(contentsBuffer);
-    })
-    .then(function(packageData){
-      t.ok(loadContentsSpy.callCount === 1);
-      t.ok(packageData instanceof Buffer);
-    })
-    .then(function() {
-      sandbox.restore();
-    })
-    .catch(t.error.bind(t));
-});
-
-test('it should fail if the extension content is loaded without having preliminary called the `load` method', function(t){
+test('#load', function(t){
   t.plan(1);
 
   newCrx().loadContents().catch(function(err){
@@ -68,8 +34,61 @@ test('it should fail if the extension content is loaded without having prelimina
   });
 });
 
-test('it should fail if the public key was not set prior to trying to generate the app ID', function(t) {
+test('#pack', function(t){
   t.plan(1);
+
   var crx = newCrx();
-  t.throws(function() { crx.generateAppId(); }, /Public key is neither set, nor given/);
+
+  crx.pack().then(function(packageData){
+    t.ok(packageData instanceof Buffer);
+  })
+  .catch(t.error.bind(t));
+});
+
+test('#loadContents', function(t){
+  t.plan(2);
+
+  var crx = newCrx();
+  var loadContentsSpy = sandbox.spy(crx, 'loadContents');
+
+  crx.load().then(function(){
+    return crx.loadContents();
+  })
+  .then(function(contentsBuffer){
+    t.ok(contentsBuffer instanceof Buffer);
+    t.ok(loadContentsSpy.callCount === 1);
+  })
+  .then(function() {
+    sandbox.restore();
+  })
+  .catch(t.error.bind(t));
+});
+
+
+test('#generateUpdateXML', function(t){
+  t.plan(2);
+
+  t.throws(function(){ ChromeExtension({}).generateUpdateXML() }, 'No URL provided for update.xml');
+
+  var crx = newCrx();
+
+  crx.pack().then(function(){
+    var xmlBuffer = crx.generateUpdateXML();
+
+    t.equals(xmlBuffer.toString(), updateXml.toString());
+  })
+  .catch(t.error.bind(t));
+});
+
+test('#generateAppId', function(t) {
+  t.plan(2);
+
+  t.throws(function() { newCrx().generateAppId(); }, /Public key is neither set, nor given/);
+
+  var crx = newCrx()
+
+  crx.generatePublicKey().then(function(publicKey){
+    t.equals(crx.generateAppId(publicKey), 'eoilidhiokfphdhpmhoaengdkehanjif');
+  })
+  .catch(t.error.bind(t));
 });
