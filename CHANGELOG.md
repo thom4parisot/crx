@@ -1,6 +1,9 @@
 ## Change Log
 
-### 3.1.0 (2016/09/22 14:06 +00:00)
+### 3.2.0 (2016/09/22 23:24 +00:00)
+- [#66](https://github.com/oncletom/crx/pull/66) Add the ability to load a list of files in addition to a path. (@oncletom)
+
+### v3.1.0 (2016/09/22 14:06 +00:00)
 - [#62](https://github.com/oncletom/crx/pull/62) Remove intermediate copy and use of temporary files (@oncletom)
 - [#63](https://github.com/oncletom/crx/pull/63) Add code coverage and add additional tests (@oncletom)
 
