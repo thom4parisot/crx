@@ -27,11 +27,32 @@ test('#ChromeExtension', function(t){
 
 
 test('#load', function(t){
-  t.plan(1);
+  t.plan(4);
 
-  newCrx().loadContents().catch(function(err){
-    t.ok(err instanceof Error);
+  newCrx().load().then(function(){
+    t.pass();
   });
+
+  var fileList = [
+    'test/myFirstExtension/manifest.json',
+    'test/myFirstExtension/icon.png',
+  ];
+
+  newCrx().load(fileList).then(function(crx){
+    t.ok(crx);
+  });
+
+  var fileList = [
+    'test/myFirstExtension/icon.png'
+  ];
+
+  newCrx().load(fileList).catch(function(err){
+    t.ok(err);
+  });
+
+  newCrx().load(new Buffer('')).catch(function(err){
+    t.ok(err);
+  })
 });
 
 test('#pack', function(t){
@@ -56,7 +77,11 @@ test('#writeFile', function(t){
 });
 
 test('#loadContents', function(t){
-  t.plan(2);
+  t.plan(3);
+
+  newCrx().loadContents().catch(function(err){
+    t.ok(err instanceof Error);
+  });
 
   var crx = newCrx();
 
@@ -70,13 +95,13 @@ test('#loadContents', function(t){
   })
   .then(function(packageData){
     var entries = new Zip(packageData)
-      .getEntries()
-      .map(function(entry){
-        return entry.entryName;
-      })
-      .sort(function(a, b){
-        return a.localeCompare(b);
-      });
+    .getEntries()
+    .map(function(entry){
+      return entry.entryName;
+    })
+    .sort(function(a, b){
+      return a.localeCompare(b);
+    });
 
     t.deepEqual(entries, ['icon.png', 'manifest.json']);
 
@@ -99,6 +124,21 @@ test('#generateUpdateXML', function(t){
     t.equals(xmlBuffer.toString(), updateXml.toString());
   })
   .catch(t.error.bind(t));
+});
+
+test('#generatePublicKey', function(t) {
+  t.plan(2);
+
+  var crx = newCrx();
+  crx.privateKey = null;
+
+  crx.generatePublicKey().catch(function(err){
+    t.ok(err);
+  });
+
+  newCrx().generatePublicKey().then(function(publicKey){
+    t.equals(publicKey.length, 162);
+  });
 });
 
 test('#generateAppId', function(t) {

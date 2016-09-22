@@ -10,6 +10,8 @@ Packages are available to use `crx` with:
 
 Massive hat tip to the [node-rsa project](https://npmjs.com/node-rsa) for the pure JavaScript encryption!
 
+**Compatibility**: this extension is compatible with `node>=0.10`.
+
 ## Install
 
 ```bash
@@ -43,12 +45,20 @@ crx.load("./myFirstExtension"))
 
 This module exports the `ChromeExtension` constructor directly, which can take an optional attribute object, which is used to extend the instance.
 
-### crx.load(path)
+### crx.load(path|files)
 
-Prepares the temporary workspace for the Chrome Extension located at `path`.
+Prepares the temporary workspace for the Chrome Extension located at `path` — which is expected to directly contain `manifest.json`.
 
 ```js
 crx.load('/path/to/extension').then(crx => {
+  // ...
+});
+```
+
+Alternatively, you can pass a list of files — the first `manifest.json` file to be found will be considered as the root of the application.
+
+```js
+crx.load(['/my/extension/manifest.json', '/my/extension/background.json']).then(crx => {
   // ...
 });
 ```

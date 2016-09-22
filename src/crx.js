@@ -8,6 +8,7 @@ var crypto = require("crypto");
 var RSA = require("node-rsa");
 var archiver = require("archiver");
 var Promise = require("es6-promise").Promise;
+var resolve = require("./resolver.js");
 
 function ChromeExtension(attrs) {
   if ((this instanceof ChromeExtension) !== true) {
@@ -28,6 +29,8 @@ function ChromeExtension(attrs) {
   this.codebase = null;
 
   this.path = null;
+
+  this.src = '**';
 
   /*
   Copying attributes
@@ -85,14 +88,16 @@ ChromeExtension.prototype = {
   load: function (path) {
     var selfie = this;
 
-    return new Promise(function(resolve, reject){
-      selfie.path = path || selfie.rootDirectory;
+    return resolve(path || selfie.rootDirectory)
+      .then(function(metadata){
+        selfie.path = metadata.path;
+        selfie.src = metadata.src;
 
-      selfie.manifest = require(join(selfie.path, "manifest.json"));
-      selfie.loaded = true;
+        selfie.manifest = require(join(selfie.path, "manifest.json"));
+        selfie.loaded = true;
 
-      resolve(selfie);
-    });
+        return selfie;
+      });
   },
 
   /**
@@ -135,6 +140,10 @@ ChromeExtension.prototype = {
     var privateKey = this.privateKey;
 
     return new Promise(function(resolve, reject){
+      if (!privateKey) {
+        return reject('Impossible to generate a public key: privateKey option has not been defined or is empty.');
+      }
+
       var key = new RSA(privateKey);
 
       resolve(key.exportKey('pkcs8-public-der'));
@@ -194,7 +203,7 @@ ChromeExtension.prototype = {
       });
 
       archive
-        .glob('**', {
+        .glob(selfie.src, {
           cwd: selfie.path,
           matchBase: true,
           ignore: ['*.pem', '.git', '*.crx']
