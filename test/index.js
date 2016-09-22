@@ -70,13 +70,13 @@ test('#loadContents', function(t){
   })
   .then(function(packageData){
     var entries = new Zip(packageData)
-      .getEntries()
-      .map(function(entry){
-        return entry.entryName;
-      })
-      .sort(function(a, b){
-        return a.localeCompare(b);
-      });
+    .getEntries()
+    .map(function(entry){
+      return entry.entryName;
+    })
+    .sort(function(a, b){
+      return a.localeCompare(b);
+    });
 
     t.deepEqual(entries, ['icon.png', 'manifest.json']);
 
@@ -99,6 +99,21 @@ test('#generateUpdateXML', function(t){
     t.equals(xmlBuffer.toString(), updateXml.toString());
   })
   .catch(t.error.bind(t));
+});
+
+test('#generatePublicKey', function(t) {
+  t.plan(2);
+
+  var crx = newCrx();
+  crx.privateKey = null;
+
+  crx.generatePublicKey().catch(function(err){
+    t.ok(err);
+  });
+
+  newCrx().generatePublicKey().then(function(publicKey){
+    t.equals(publicKey.length, 162);
+  });
 });
 
 test('#generateAppId', function(t) {
