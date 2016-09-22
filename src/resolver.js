@@ -1,6 +1,5 @@
 'use strict';
 
-var _ = require("lodash");
 var path = require("path");
 var join = path.join;
 var Promise = require("es6-promise").Promise;
@@ -17,9 +16,19 @@ module.exports = function resolve(pathOrFiles) {
 
     // new mode, with a list of files
     else if (Array.isArray(pathOrFiles)) {
-      var manifestFile = _.find(pathOrFiles, function(f){
-        return /(^|\/)manifest.json$/.test(f);
+      var manifestFile = '';
+
+      pathOrFiles.some(function(f){
+        if (/(^|\/)manifest.json$/.test(f)) {
+          manifestFile = f;
+          return true;
+        }
       });
+
+      if (!manifestFile) {
+        return reject(new Error('Unable to locate a manifest file in your list of files.'))
+      }
+
       var manifestDir = path.dirname(manifestFile);
 
       return resolve({
