@@ -8,7 +8,9 @@ Massive hat tip to the [node-rsa project](https://github.com/rzcoder/node-rsa)!
 
 ## Install
 
-    $ npm install crx
+```bash
+$ npm install crx
+```
 
 ## Module API
 
@@ -19,42 +21,25 @@ Asynchronous functions returns an [ES6 Promise](https://github.com/jakearchibald
 
 This module exports the `ChromeExtension` constructor directly, which can take an optional attribute object, which is used to extend the instance.
 
-### crx.load([path])
+### crx.load(path)
 
-Asynchronously prepares the temporary workspace for the Chrome Extension located at `attr.rootDirectory`.
+Prepares the temporary workspace for the Chrome Extension located at `path`.
 
 ```js
-crx.load().then(function(crx){
+crx.load('/path/to/extension').then(crx => {
   // ...
 });
 ```
 
-You can optionally pass a `path` argument in lieu of the `rootDirectory` constructor option.
-
-### crx.pack([archiveBuffer])
+### crx.pack()
 
 Packs the Chrome Extension and resolves the promise with a Buffer containing the `.crx` file.
 
 ```js
-crx.pack().then(function(crxBuffer){
-  fs.writeFile('/tmp/foobar.crx', crxBuffer);
-});
-```
-
-You can optionally pass an `archiveBuffer` argument if you want a finer grained control over the packing process:
-
-```js
-crx.load()
-  .then(function(){
-    return crx.loadContents();
-  })
-  .then(function(archiveBuffer){
-    fs.writeFile('path/to/extension.zip', archiveBuffer);
-
-    return crx.pack(archiveBuffer);
-  })
-  .then(function(crxBuffer){
-    fs.writeFile('path/to/extension.crx', crxBuffer);
+crx.load('/path/to/extension')
+  .then(crx => crx.pack())
+  .then(crxBuffer => {
+    fs.writeFile('/tmp/foobar.crx', crxBuffer);
   });
 ```
 
@@ -63,35 +48,35 @@ crx.load()
 Returns a Buffer containing the update.xml file used for `autoupdate`, as specified for `update_url` in the manifest. In this case, the instance must have a property called `codebase`.
 
 ```js
-var crx = new ChromeExtension({ ..., codebase: 'https://autoupdateserver.com/myFirstExtension.crx' });
+const crx = new ChromeExtension({ ..., codebase: 'https://autoupdateserver.com/myFirstExtension.crx' });
 
-crx.pack().then(function(crxBuffer){
-  // ...
-
-  var xmlBuffer = crx.generateUpdateXML();
-  fs.writeFile('/foo/bar/update.xml', xmlBuffer);
-});
+crx.load('/path/to/extension')
+  .then(crx => crx.pack())
+  .then(crxBuffer => {
+    // ...
+    const xmlBuffer = crx.generateUpdateXML();
+    fs.writeFile('/foo/bar/update.xml', xmlBuffer);
+  });
 ```
 
 ## Module example
 
 ```javascript
-var fs = require("fs"),
-var ChromeExtension = require("crx"),
-var join = require("path").join,
-var crx = new ChromeExtension(
+const fs = require("fs"),
+const ChromeExtension = require("crx"),
+const { join } = require("path"),
+const crx = new ChromeExtension(
   codebase: "http://localhost:8000/myFirstExtension.crx",
   privateKey: fs.readFileSync(join(__dirname, "key.pem"))
 });
 
 crx.load(join(__dirname, "myFirstExtension"))
-  .then(function() {
-    return crx.pack().then(function(crxBuffer){
-      var updateXML = crx.generateUpdateXML()
+  .then(crx => crx.pack())
+  .then(crxBuffer => {
+    const updateXML = crx.generateUpdateXML()
 
-      fs.writeFile(join(__dirname, "update.xml"), updateXML)
-      fs.writeFile(join(__dirname, "myFirstExtension.crx"), crxBuffer)
-    })
+    fs.writeFile(join(__dirname, "..", "update.xml"), updateXML);
+    fs.writeFile(join(__dirname, "..", "myFirstExtension.crx"), crxBuffer);
   });
 ```
 
@@ -186,4 +171,3 @@ Copyright
     LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
     OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
