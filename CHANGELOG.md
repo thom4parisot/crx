@@ -1,6 +1,9 @@
 ## Change Log
 
-### 3.2.0 (2016/09/22 23:24 +00:00)
+### 3.2.1 (2016/10/13 13:13 +00:00)
+- [#67](https://github.com/oncletom/crx/pull/67) Drop iojs from package.engines (@dsblv)
+
+### v3.2.0 (2016/09/22 23:25 +00:00)
 - [#66](https://github.com/oncletom/crx/pull/66) Add the ability to load a list of files in addition to a path. (@oncletom)
 
 ### v3.1.0 (2016/09/22 14:06 +00:00)
