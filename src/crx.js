@@ -93,7 +93,12 @@ ChromeExtension.prototype = {
         selfie.path = metadata.path;
         selfie.src = metadata.src;
 
-        selfie.manifest = require(join(selfie.path, "manifest.json"));
+        try {
+          selfie.manifest = require(join(selfie.path, "manifest.json"));
+        }
+        catch(ex) {
+          return reject(ex);
+        }
         selfie.loaded = true;
 
         return selfie;
