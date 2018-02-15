@@ -1,4 +1,4 @@
-# crx [![Build Status](https://secure.travis-ci.org/oncletom/crx.svg)](http://travis-ci.org/oncletom/crx)
+# crx [![Build Status](https://secure.travis-ci.org/oncletom/crx.svg)](http://travis-ci.org/oncletom/crx) [![Build status](https://ci.appveyor.com/api/projects/status/i8v95qmgwwxic5wn?svg=true)](https://ci.appveyor.com/project/oncletom/crx)
 
 > crx is a utility to **package Google Chrome extensions** via a *Node API* and the *command line*. It is written **purely in JavaScript** and **does not require OpenSSL**!
 
