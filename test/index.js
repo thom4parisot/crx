@@ -29,9 +29,7 @@ test('#ChromeExtension', function(t){
 test('#load', function(t){
   t.plan(4);
 
-  newCrx().load().then(function(){
-    t.pass();
-  });
+  newCrx().load().then(t.pass);
 
   var fileList = [
     'test/myFirstExtension/manifest.json',
@@ -152,4 +150,18 @@ test('#generateAppId', function(t) {
     t.equals(crx.generateAppId(publicKey), 'eoilidhiokfphdhpmhoaengdkehanjif');
   })
   .catch(t.error.bind(t));
+});
+
+test('end to end', function (t) {
+  var crx = newCrx();
+
+  crx.load()
+    .then(function(crx) {
+      return crx.pack();
+    })
+    .then(function(crxBuffer) {
+      fs.writeFile('build.crx', crxBuffer, t.error);
+      fs.writeFile('update.xml', crx.generateUpdateXML(), t.error);
+    })
+    .then(t.end);
 });
