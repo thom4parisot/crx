@@ -35,7 +35,7 @@
     "archiver": "^1.1.0",
     "commander": "^2.5.0",
     "es6-promise": "^3.0.0",
-    "node-rsa": "^0.2.10"
+    "node-rsa": "^0.3.0"
   },
   "devDependencies": {
     "adm-zip": "^0.4.7",
