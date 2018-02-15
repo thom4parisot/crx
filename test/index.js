@@ -161,9 +161,7 @@ test('end to end', function (t) {
     })
     .then(function(crxBuffer) {
       fs.writeFile('build.crx', crxBuffer, t.error);
-
-      const xmlBuffer = crx.generateUpdateXML();
-      fs.writeFile('update.xml', xmlBuffer, t.error);
+      fs.writeFile('update.xml', crx.generateUpdateXML(), t.error);
     })
     .then(t.end);
 });
