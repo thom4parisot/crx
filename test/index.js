@@ -156,8 +156,10 @@ test('end to end', function (t) {
   var crx = newCrx();
 
   crx.load()
-    .then(crx => crx.pack())
-    .then(crxBuffer => {
+    .then(function(crx) {
+      return crx.pack();
+    })
+    .then(function(crxBuffer) {
       fs.writeFile('build.crx', crxBuffer, t.error);
 
       const xmlBuffer = crx.generateUpdateXML();
