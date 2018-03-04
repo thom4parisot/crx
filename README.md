@@ -91,6 +91,14 @@ crx.load('/path/to/extension')
   });
 ```
 
+### crx.generateAppId
+
+Generates application id (extension id) from given path.
+
+```js
+new crx().generateAppId('/path/to/ext') // epgkjnfaepceeghkjflpimappmlalchn
+```
+
 ## CLI API
 
 ### crx pack [directory] [-o file] [--zip-output file] [-p private-key]
