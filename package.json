@@ -33,14 +33,14 @@
   },
   "dependencies": {
     "archiver": "^1.1.0",
-    "commander": "^2.5.0",
-    "es6-promise": "^3.0.0",
-    "node-rsa": "^0.3.0"
+    "commander": "^2.15.0",
+    "es6-promise": "^4.2.4",
+    "node-rsa": "^0.4.2"
   },
   "devDependencies": {
     "adm-zip": "^0.4.7",
     "github-changes": "^1.0.0",
     "nyc": "^8.3.0",
-    "tape": "^4.6.0"
+    "tape": "^4.9.0"
   }
 }
