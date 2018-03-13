@@ -273,6 +273,7 @@ ChromeExtension.prototype = {
         keyOrPath = keyOrPath[0].toUpperCase() + keyOrPath.slice(1);
 
         // TODO move to Buffer.from when drop old Node versions in crx@4
+        /* istanbul ignore next */
         keyOrPath = ('from' in Buffer)
           ? Buffer.from(keyOrPath, "utf-16le")
           : new Buffer(keyOrPath, "utf-16le");
