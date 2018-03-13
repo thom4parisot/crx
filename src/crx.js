@@ -92,7 +92,7 @@ ChromeExtension.prototype = {
       .then(function(metadata){
         selfie.path = metadata.path;
         selfie.src = metadata.src;
-	    
+
         var manifestPath = join(selfie.path, 'manifest.json')
         delete require.cache[manifestPath];
 
@@ -256,19 +256,39 @@ ChromeExtension.prototype = {
    * @param {Buffer|string} [publicKey] the public key to use to generate the app ID
    * @returns {string}
    */
-  generateAppId: function (publicKey) {
-    publicKey = publicKey || this.publicKey;
-    if (typeof publicKey !== 'string' && !(publicKey instanceof Buffer)) {
+  generateAppId: function (keyOrPath) {
+    keyOrPath = keyOrPath || this.publicKey;
+
+    if (typeof keyOrPath !== 'string' && !(keyOrPath instanceof Buffer)) {
       throw new Error('Public key is neither set, nor given');
     }
+
+    // Handling Windows Path
+    // Possibly to be moved in a different method
+    if (typeof keyOrPath === 'string') {
+      var charCode = keyOrPath.charCodeAt(0);
+
+      // 65 (A) < charCode < 122 (z)
+      if (charCode >= 65 && charCode <= 122 && keyOrPath[1] === ':') {
+        keyOrPath = keyOrPath[0].toUpperCase() + keyOrPath.slice(1);
+
+        // TODO move to Buffer.from when drop old Node versions in crx@4
+        /* istanbul ignore next */
+        keyOrPath = ('from' in Buffer)
+          ? Buffer.from(keyOrPath, "utf-16le")
+          : new Buffer(keyOrPath, "utf-16le");
+      }
+    }
+
     return crypto
       .createHash("sha256")
-      .update(publicKey)
-      .digest("hex")
-      .slice(0, 32)
-      .replace(/./g, function (x) {
-        return (parseInt(x, 16) + 10).toString(26);
-      });
+      .update(keyOrPath)
+      .digest()
+      .toString("hex")
+      .split("")
+      .map(function(x) { return (parseInt(x, 16) + 0x0A).toString(26); })
+      .join("")
+      .slice(0, 32);
   },
 
   /**
