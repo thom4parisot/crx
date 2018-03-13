@@ -271,7 +271,11 @@ ChromeExtension.prototype = {
       // 65 (A) < charCode < 122 (z)
       if (charCode >= 65 && charCode <= 122 && keyOrPath[1] === ':') {
         keyOrPath = keyOrPath[0].toUpperCase() + keyOrPath.slice(1);
-        keyOrPath = Buffer.from(keyOrPath, "utf-16le");
+
+        // TODO move to Buffer.from when drop old Node versions in crx@4
+        keyOrPath = ('from' in Buffer)
+          ? Buffer.from(keyOrPath, "utf-16le")
+          : new Buffer(keyOrPath, "utf-16le");
       }
     }
 
