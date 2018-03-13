@@ -263,12 +263,13 @@ ChromeExtension.prototype = {
     }
     return crypto
       .createHash("sha256")
-      .update(publicKey)
-      .digest("hex")
-      .slice(0, 32)
-      .replace(/./g, function (x) {
-        return (parseInt(x, 16) + 10).toString(26);
-      });
+      .update(Buffer.from(path.replace(/^[a-z]/g, function(match) { return match.toUpperCase() }), "utf16le"))
+      .digest()
+      .toString("hex")
+      .split("")
+      .map(x => String.fromCharCode(parseInt(x,16) + 'a'.charCodeAt(0)))
+      .join("")
+      .slice(0,32);
   },
 
   /**
