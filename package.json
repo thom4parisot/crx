@@ -9,18 +9,18 @@
     "LetzNav | LetzNav <info@letznav.com>"
   ],
   "bin": {
-    "crx": "./bin/crx.js"
+    "crx": "bin/crx.js"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/prathyushaletznav/crx.git"
   },
-  "main": "./src/crx.js",
+  "main": "src/crx.js",
   "engines": {
     "node": ">=0.10"
   },
   "scripts": {
-    "test": "nyc tape ./test/*.js",
+    "test": "nyc tape test/*.js",
     "version": "npm run changelog && git add CHANGELOG.md",
     "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version}  --only-pulls --use-commit-body"
   },
