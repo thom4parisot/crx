@@ -183,7 +183,7 @@ ChromeExtension.prototype = {
 
     return new Promise(function(resolve, reject){
       var archive = archiver('zip');
-      const contents = new BufferBuilder();
+      var contents = new BufferBuilder();
 
       if (!selfie.loaded) {
 	      throw new Error('crx.load needs to be called first in order to prepare the workspace.');
