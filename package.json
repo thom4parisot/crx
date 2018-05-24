@@ -1,8 +1,8 @@
 {
-  "author": "letzNav Inc.",
-  "name": "@prathyushaletznav/crx",
+  "author": "letzNav IncS.",
+  "name": "@letznav/crx",
   "description": "crx is a utility to package Google Chrome extensions via a Node API and the command line",
-  "version": "4.0.2",
+  "version": "1.0.0",
   "license": "MIT",
   "homepage": "https://github.com/prathyushaletznav/crx",
   "contributors": [
@@ -20,7 +20,7 @@
     "node": ">=0.10"
   },
   "scripts": {
-    "test": "nyc tape test/*.js",
+    "test": "nyc tape ./test/*.js",
     "version": "npm run changelog && git add CHANGELOG.md",
     "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version}  --only-pulls --use-commit-body"
   },
