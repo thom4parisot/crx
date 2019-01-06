@@ -10,7 +10,7 @@ Packages are available to use `crx` with:
 
 Massive hat tip to the [node-rsa project](https://npmjs.com/node-rsa) for the pure JavaScript encryption!
 
-**Compatibility**: this extension is compatible with `node>=0.10`.
+**Compatibility**: this extension is compatible with `node>=6`.
 
 ## Install
 
@@ -20,7 +20,7 @@ $ npm install crx
 
 ## Module API
 
-Asynchronous functions returns an [ES6 Promise](https://github.com/jakearchibald/es6-promise).
+Asynchronous functions returns a native ECMAScript Promise.
 
 ```js
 const fs = require("fs");

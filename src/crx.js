@@ -7,7 +7,6 @@ var join = path.join;
 var crypto = require("crypto");
 var RSA = require("node-rsa");
 var archiver = require("archiver");
-var Promise = require("es6-promise").Promise;
 var resolve = require("./resolver.js");
 
 function ChromeExtension(attrs) {
@@ -162,7 +161,7 @@ ChromeExtension.prototype = {
    * @returns {Buffer}
    */
   generateSignature: function (contents) {
-    return new Buffer(
+    return Buffer.from(
       crypto
         .createSign("sha1")
         .update(contents)
@@ -182,7 +181,7 @@ ChromeExtension.prototype = {
 
     return new Promise(function(resolve, reject){
       var archive = archiver('zip');
-      var contents = new Buffer('');
+      var contents = Buffer.from('');
 
       if (!selfie.loaded) {
 	      throw new Error('crx.load needs to be called first in order to prepare the workspace.');
@@ -231,7 +230,7 @@ ChromeExtension.prototype = {
     var zipLength = contents.length;
     var length = 16 + keyLength + sigLength + zipLength;
 
-    var crx = new Buffer(length);
+    var crx = Buffer.alloc(length);
 
     crx.write("Cr24" + new Array(13).join("\x00"), "binary");
 
@@ -272,11 +271,7 @@ ChromeExtension.prototype = {
       if (charCode >= 65 && charCode <= 122 && keyOrPath[1] === ':') {
         keyOrPath = keyOrPath[0].toUpperCase() + keyOrPath.slice(1);
 
-        // TODO move to Buffer.from when drop old Node versions in crx@4
-        /* istanbul ignore next */
-        keyOrPath = ('from' in Buffer)
-          ? Buffer.from(keyOrPath, "utf-16le")
-          : new Buffer(keyOrPath, "utf-16le");
+        keyOrPath = Buffer.from(keyOrPath, "utf-16le");
       }
     }
 
@@ -286,7 +281,7 @@ ChromeExtension.prototype = {
       .digest()
       .toString("hex")
       .split("")
-      .map(function(x) { return (parseInt(x, 16) + 0x0A).toString(26); })
+      .map(x => (parseInt(x, 16) + 0x0A).toString(26))
       .join("")
       .slice(0, 32);
   },
@@ -303,7 +298,7 @@ ChromeExtension.prototype = {
       throw new Error("No URL provided for update.xml.");
     }
 
-    return new Buffer(
+    return Buffer.from(
       "<?xml version='1.0' encoding='UTF-8'?>\n" +
       "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
       "  <app appid='" + (this.appId || this.generateAppId()) + "'>\n" +

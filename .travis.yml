@@ -1,22 +1,13 @@
 language: node_js
 node_js:
-- '0.10'
-- '0.12'
-- iojs
-- v4
-- v5
-- v6
+- v8
+- v10
 - node
-sudo: false
-
-cache:
-  directories:
-  - node_modules
-
+cache: npm
 deploy:
   provider: npm
   email: hi@oncletom.io
-  api_key: "$NPM_TOKEN"
+  api-key: $NPM_TOKEN
   on:
     tags: true
     repo: oncletom/crx
