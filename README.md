@@ -25,9 +25,9 @@ Asynchronous functions returns an [ES6 Promise](https://github.com/jakearchibald
 ```js
 const fs = require("fs");
 const ChromeExtension = require("crx");
-const crx = new ChromeExtension(
+const crx = new ChromeExtension({
   codebase: "http://localhost:8000/myFirstExtension.crx",
-  privateKey: fs.readFileSync("./key.pem"))
+  privateKey: fs.readFileSync("./key.pem")
 });
 
 crx.load("./myFirstExtension"))

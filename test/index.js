@@ -140,16 +140,23 @@ test('#generatePublicKey', function(t) {
 });
 
 test('#generateAppId', function(t) {
-  t.plan(2);
+  t.plan(4);
 
   t.throws(function() { newCrx().generateAppId(); }, /Public key is neither set, nor given/);
 
   var crx = newCrx()
 
+  // from Public Key
   crx.generatePublicKey().then(function(publicKey){
     t.equals(crx.generateAppId(publicKey), 'eoilidhiokfphdhpmhoaengdkehanjif');
   })
   .catch(t.error.bind(t));
+  
+  // from Linux Path
+  t.equals(crx.generateAppId('/usr/local/extension'), 'ioglhmppkolgcgoonkfdbjkcedfjhbcd');
+  
+  // from Windows Path
+  t.equals(crx.generateAppId('c:\\a'), 'igchicfaapedlfgmepccnpolhajaphik');
 });
 
 test('end to end', function (t) {
