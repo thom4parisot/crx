@@ -3,7 +3,6 @@
 var path = require("path");
 var fs = require("fs");
 var rsa = require('node-rsa');
-var Promise = require('es6-promise').Promise;
 
 var program = require("commander");
 var ChromeExtension = require("..");

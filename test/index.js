@@ -48,7 +48,7 @@ test('#load', function(t){
     t.ok(err);
   });
 
-  newCrx().load(new Buffer('')).catch(function(err){
+  newCrx().load(Buffer.from('')).catch(function(err){
     t.ok(err);
   })
 });
@@ -151,10 +151,10 @@ test('#generateAppId', function(t) {
     t.equals(crx.generateAppId(publicKey), 'eoilidhiokfphdhpmhoaengdkehanjif');
   })
   .catch(t.error.bind(t));
-  
+
   // from Linux Path
   t.equals(crx.generateAppId('/usr/local/extension'), 'ioglhmppkolgcgoonkfdbjkcedfjhbcd');
-  
+
   // from Windows Path
   t.equals(crx.generateAppId('c:\\a'), 'igchicfaapedlfgmepccnpolhajaphik');
 });

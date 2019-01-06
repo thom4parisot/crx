@@ -2,7 +2,6 @@
 
 var path = require("path");
 var join = path.join;
-var Promise = require("es6-promise").Promise;
 
 module.exports = function resolve(pathOrFiles) {
   return new Promise(function(resolve, reject){
