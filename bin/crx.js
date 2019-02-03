@@ -2,11 +2,11 @@
 
 var path = require("path");
 var fs = require("fs");
-var rsa = require('node-rsa');
+var rsa = require("node-rsa");
 
 var program = require("commander");
 var ChromeExtension = require("..");
-var pkg = require('../package.json');
+var pkg = require("../package.json");
 
 var resolve = path.resolve;
 var join = path.join;
@@ -26,10 +26,16 @@ program
 program
   .command("pack [directory]")
   .description("pack [directory] into a .crx extension")
-  .option("-o, --output <file>", "write the crx content to <file> instead of stdout")
+  .option(
+    "-o, --output <file>",
+    "write the crx content to <file> instead of stdout"
+  )
   .option("--zip-output <file>", "write the zip content to <file>")
   .option("-p, --private-key <file>", "relative path to private key [key.pem]")
-  .option("-b, --max-buffer <total>", "max amount of memory allowed to generate the crx, in byte")
+  .option(
+    "-b, --max-buffer <total>",
+    "max amount of memory allowed to generate the crx, in byte"
+  )
   .action(pack);
 
 program.parse(process.argv);
@@ -40,8 +46,8 @@ program.parse(process.argv);
  * @returns {Promise}
  */
 function readKeyFile(keyPath) {
-  return new Promise(function (resolve, reject) {
-    fs.readFile(keyPath, function (err, data) {
+  return new Promise(function(resolve, reject) {
+    fs.readFile(keyPath, function(err, data) {
       if (err) {
         reject(err);
       } else {
@@ -57,93 +63,113 @@ function readKeyFile(keyPath) {
  * @returns {Promise}
  */
 function generateKeyFile(keyPath) {
-  return new Promise(function(resolve, reject) {
-    var key = new rsa({b: 2048}),
-        keyVal = key.exportKey('pkcs1-private-pem');
+  return new Promise(function(resolve) {
+    var key = new rsa({ b: 2048 }),
+      keyVal = key.exportKey("pkcs1-private-pem");
 
-    fs.writeFile(keyPath, keyVal, function(err){
+    fs.writeFile(keyPath, keyVal, function(err) {
       if (err) {
         throw err;
       }
 
-      console.log('Key file has been generated at %s', keyPath);
+      // eslint-disable-next-line no-console
+      console.log("Key file has been generated at %s", keyPath);
 
       resolve(keyVal);
     });
   });
 }
 
-function keygen (dir, program) {
+function keygen(dir, program) {
   dir = dir ? resolve(cwd, dir) : cwd;
 
   var keyPath = join(dir, "key.pem");
 
-  fs.exists(keyPath, function (exists) {
+  fs.exists(keyPath, function(exists) {
     if (exists && !program.force) {
-      throw new Error('key.pem already exists in the given location.');
+      throw new Error("key.pem already exists in the given location.");
     }
 
     generateKeyFile(keyPath);
   });
 }
 
-function pack (dir, program) {
+function pack(dir, program) {
   var input = dir ? resolve(cwd, dir) : cwd;
-  var keyPath = program.privateKey ? resolve(cwd, program.privateKey) : join(input, "key.pem");
+  var keyPath = program.privateKey
+    ? resolve(cwd, program.privateKey)
+    : join(input, "key.pem");
   var output;
 
   if (program.output) {
-    if (path.extname(program.output) !== '.crx') {
-      throw new Error('-o file is expected to have a `.crx` suffix: [' + program.output + '] was given.');
+    if (path.extname(program.output) !== ".crx") {
+      throw new Error(
+        "-o file is expected to have a `.crx` suffix: [" +
+          program.output +
+          "] was given."
+      );
     }
   }
 
   if (program.zipOutput) {
-    if (path.extname(program.zipOutput) !== '.zip') {
-      throw new Error('--zip-output file is expected to have a `.zip` suffix: [' + program.zipOutput + '] was given.');
+    if (path.extname(program.zipOutput) !== ".zip") {
+      throw new Error(
+        "--zip-output file is expected to have a `.zip` suffix: [" +
+          program.zipOutput +
+          "] was given."
+      );
     }
   }
 
   var crx = new ChromeExtension({
     rootDirectory: input,
-    maxBuffer:     program.maxBuffer
+    maxBuffer: program.maxBuffer
   });
 
-  readKeyFile(keyPath).then(null, function (err) {
-    // If the key file doesn't exist, create one
-    if (err.code === 'ENOENT') {
-      return generateKeyFile(keyPath);
-    } else {
-      throw err;
-    }
-  }).then(function (key) {
-    crx.privateKey = key;
-  }).then(function () {
-    crx.load().then(function () {
-      return crx.loadContents();
-    }).then(function (zipBuffer) {
-
-      if (program.zipOutput) {
-        var outFile = resolve(cwd, program.zipOutput);
-
-        fs.createWriteStream(outFile).end(zipBuffer);
-      }
-
-      return crx.pack(zipBuffer);
-    }).then(function (crxBuffer) {
-
-      if (program.output) {
-        output = program.output;
+  readKeyFile(keyPath)
+    .then(null, function(err) {
+      // If the key file doesn't exist, create one
+      if (err.code === "ENOENT") {
+        return generateKeyFile(keyPath);
       } else {
-        output = path.basename(cwd) + '.crx';
+        throw err;
       }
+    })
+    .then(function(key) {
+      crx.privateKey = key;
+    })
+    .then(function() {
+      crx
+        .load()
+        .then(function() {
+          return crx.loadContents();
+        })
+        .then(function(zipBuffer) {
+          if (program.zipOutput) {
+            var outFile = resolve(cwd, program.zipOutput);
 
-      var outFile = resolve(cwd, output);
-      (outFile ? fs.createWriteStream(outFile) : process.stdout).end(crxBuffer);
-    }).then(function () {
-      console.log('%s has been generated in %s', output, cwd);
+            fs.createWriteStream(outFile).end(zipBuffer);
+          }
+
+          return crx.pack(zipBuffer);
+        })
+        .then(function(crxBuffer) {
+          if (program.output) {
+            output = program.output;
+          } else {
+            output = path.basename(cwd) + ".crx";
+          }
+
+          var outFile = resolve(cwd, output);
+          (outFile ? fs.createWriteStream(outFile) : process.stdout).end(
+            crxBuffer
+          );
+        })
+        .then(function() {
+          // eslint-disable-next-line no-console
+          console.log("%s has been generated in %s", output, cwd);
+        });
     });
-  });
 }
 
 module.exports = program;

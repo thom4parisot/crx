@@ -18,6 +18,7 @@
   },
   "scripts": {
     "test": "nyc tape ./test/*.js",
+    "posttest": "eslint src/*.js bin/crx.js",
     "version": "npm run changelog && git add CHANGELOG.md",
     "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version}  --only-pulls --use-commit-body"
   },
@@ -38,6 +39,7 @@
   },
   "devDependencies": {
     "adm-zip": "^0.4.13",
+    "eslint": "^5.13.0",
     "github-changes": "^1.0.0",
     "nyc": "^13.1.0",
     "tape": "^4.9.2"
