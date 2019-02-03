@@ -1,6 +1,9 @@
 ## Change Log
 
-### 4.0.0 (2019/02/03 15:57 +00:00)
+### 4.0.1 (2019/02/03 16:16 +00:00)
+- [#96](https://github.com/oncletom/crx/pull/96) Remove deprecated crx.writeFile() (@oncletom)
+
+### v4.0.0 (2019/02/03 15:57 +00:00)
 - [#95](https://github.com/oncletom/crx/pull/95) Release crx@4 (@oncletom)
 - [#93](https://github.com/oncletom/crx/pull/93) fix demo code (@g8up)
 - [#88](https://github.com/oncletom/crx/pull/88) Bump Node.js version requirement (@oncletom)

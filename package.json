@@ -2,7 +2,7 @@
   "author": "Jed Schmidt <tr@nslator.jp> (http://jed.is)",
   "name": "crx",
   "description": "crx is a utility to package Google Chrome extensions via a Node API and the command line",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "license": "MIT",
   "homepage": "https://github.com/oncletom/crx",
   "bin": {
