@@ -3,7 +3,11 @@ node_js:
 - v8
 - v10
 - node
+allow_failure:
+  - node_js: v8
+
 cache: npm
+
 deploy:
   provider: npm
   email: hi@oncletom.io
