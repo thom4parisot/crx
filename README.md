@@ -4,7 +4,7 @@
 
 Massive hat tip to the [node-rsa project](https://npmjs.com/node-rsa) for the pure JavaScript encryption!
 
-**Compatibility**: this extension is compatible with `node>=0.10`.
+**Compatibility**: this extension is compatible with `node>=10`.
 
 Packages are available to use `crx` with:
 
