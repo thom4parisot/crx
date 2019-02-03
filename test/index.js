@@ -21,7 +21,7 @@ function newCrx(){
 test('#ChromeExtension', function(t){
   t.plan(2);
 
-  t.ok(ChromeExtension({}) instanceof ChromeExtension);
+  t.throws(() => ChromeExtension({}));
   t.ok(newCrx());
 });
 
@@ -69,9 +69,7 @@ test('#writeFile', function(t){
 
   var crx = newCrx();
 
-  crx.writeFile('/tmp/crx', new Error('')).catch(function(err){
-    t.ok(err);
-  });
+  t.throws(() => crx.writeFile('/tmp/crx'));
 });
 
 test('#loadContents', function(t){
@@ -112,7 +110,7 @@ test('#loadContents', function(t){
 test('#generateUpdateXML', function(t){
   t.plan(2);
 
-  t.throws(function(){ ChromeExtension({}).generateUpdateXML() }, 'No URL provided for update.xml');
+  t.throws(() => new ChromeExtension({}).generateUpdateXML(), 'No URL provided for update.xml');
 
   var crx = newCrx();
 

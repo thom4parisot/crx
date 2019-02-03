@@ -1,6 +1,20 @@
 ## Change Log
 
-### 3.2.1 (2016/10/13 13:13 +00:00)
+### 4.0.1 (2019/02/03 16:16 +00:00)
+- [#96](https://github.com/oncletom/crx/pull/96) Remove deprecated crx.writeFile() (@oncletom)
+
+### v4.0.0 (2019/02/03 15:57 +00:00)
+- [#95](https://github.com/oncletom/crx/pull/95) Release crx@4 (@oncletom)
+- [#93](https://github.com/oncletom/crx/pull/93) fix demo code (@g8up)
+- [#88](https://github.com/oncletom/crx/pull/88) Bump Node.js version requirement (@oncletom)
+- [#90](https://github.com/oncletom/crx/pull/90) Fix syntax in module usage (@blimmer)
+- [#83](https://github.com/oncletom/crx/pull/83) Update dependencies (@oncletom)
+- [#81](https://github.com/oncletom/crx/pull/81) Fix extension ID calculation from path (@oncletom, @conioh)
+- [#76](https://github.com/oncletom/crx/pull/76) Add Appveyor configuration to test build on Windows (@oncletom)
+- [#71](https://github.com/oncletom/crx/pull/71) Remove the manifest data from cache on crx.load() (@binhqx)
+- [#75](https://github.com/oncletom/crx/pull/75) [Snyk Update] New fixes for 1 vulnerable dependency path (@snyk-bot)
+
+### v3.2.1 (2016/10/13 13:13 +00:00)
 - [#67](https://github.com/oncletom/crx/pull/67) Drop iojs from package.engines (@dsblv)
 
 ### v3.2.0 (2016/09/22 23:25 +00:00)

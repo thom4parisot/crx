@@ -1,7 +1,5 @@
-/* global require, process, Buffer, module */
-'use strict';
+"use strict";
 
-var fs = require("fs");
 var path = require("path");
 var join = path.join;
 var crypto = require("crypto");
@@ -9,39 +7,23 @@ var RSA = require("node-rsa");
 var archiver = require("archiver");
 var resolve = require("./resolver.js");
 
-function ChromeExtension(attrs) {
-  if ((this instanceof ChromeExtension) !== true) {
-    return new ChromeExtension(attrs);
+const DEFAULTS = {
+  appId: null,
+  rootDirectory: "",
+  publicKey: null,
+  privateKey: null,
+  codebase: null,
+  path: null,
+  src: "**",
+};
+
+class ChromeExtension {
+  constructor(attrs) {
+    // Setup defaults
+    Object.assign(this, DEFAULTS, attrs);
+
+    this.loaded = false;
   }
-
-  /*
-   Defaults
-   */
-  this.appId = null;
-
-  this.rootDirectory = '';
-
-  this.publicKey = null;
-
-  this.privateKey = null;
-
-  this.codebase = null;
-
-  this.path = null;
-
-  this.src = '**';
-
-  /*
-  Copying attributes
-   */
-  for (var name in attrs) {
-    this[name] = attrs[name];
-  }
-
-  this.loaded = false;
-}
-
-ChromeExtension.prototype = {
 
   /**
    * Packs the content of the extension in a crx file.
@@ -55,7 +37,7 @@ ChromeExtension.prototype = {
    * });
    *
    */
-  pack: function (contentsBuffer) {
+  pack (contentsBuffer) {
     if (!this.loaded) {
       return this.load().then(this.pack.bind(this, contentsBuffer));
     }
@@ -66,7 +48,7 @@ ChromeExtension.prototype = {
       contentsBuffer || selfie.loadContents()
     ];
 
-    return Promise.all(packP).then(function(outputs){
+    return Promise.all(packP).then(function(outputs) {
       var publicKey = outputs[0];
       var contents = outputs[1];
 
@@ -76,7 +58,7 @@ ChromeExtension.prototype = {
 
       return selfie.generatePackage(signature, publicKey, contents);
     });
-  },
+  }
 
   /**
    * Loads extension manifest and copies its content to a workable path.
@@ -84,46 +66,23 @@ ChromeExtension.prototype = {
    * @param {string=} path
    * @returns {Promise}
    */
-  load: function (path) {
+  load (path) {
     var selfie = this;
 
-    return resolve(path || selfie.rootDirectory)
-      .then(function(metadata){
-        selfie.path = metadata.path;
-        selfie.src = metadata.src;
+    return resolve(path || selfie.rootDirectory).then(function(metadata) {
+      selfie.path = metadata.path;
+      selfie.src = metadata.src;
 
-        var manifestPath = join(selfie.path, 'manifest.json')
-        delete require.cache[manifestPath];
+      var manifestPath = join(selfie.path, "manifest.json");
+      delete require.cache[manifestPath];
 
-        selfie.manifest = require(manifestPath);
-        selfie.loaded = true;
+      selfie.manifest = require(manifestPath);
+      selfie.loaded = true;
 
-        return selfie;
-      });
-  },
-
-  /**
-   * Writes data into the extension workable directory.
-   *
-   * @deprecated
-   * @param {string} path
-   * @param {*} data
-   * @returns {Promise}
-   */
-  writeFile: function (path, data) {
-    var absPath = join(this.path, path);
-
-    /* istanbul ignore next */
-    return new Promise(function(resolve, reject){
-      fs.writeFile(absPath, data, function (err) {
-        if (err) {
-          return reject(err);
-        }
-
-        resolve();
-      });
+      return selfie;
     });
-  },
+  }
+
 
   /**
    * Generates a public key.
@@ -138,19 +97,21 @@ ChromeExtension.prototype = {
    *   // do something with publicKey
    * });
    */
-  generatePublicKey: function () {
+  generatePublicKey () {
     var privateKey = this.privateKey;
 
-    return new Promise(function(resolve, reject){
+    return new Promise(function(resolve, reject) {
       if (!privateKey) {
-        return reject('Impossible to generate a public key: privateKey option has not been defined or is empty.');
+        return reject(
+          "Impossible to generate a public key: privateKey option has not been defined or is empty."
+        );
       }
 
       var key = new RSA(privateKey);
 
-      resolve(key.exportKey('pkcs8-public-der'));
+      resolve(key.exportKey("pkcs8-public-der"));
     });
-  },
+  }
 
   /**
    * Generates a SHA1 package signature.
@@ -160,7 +121,7 @@ ChromeExtension.prototype = {
    * @param {Buffer} contents
    * @returns {Buffer}
    */
-  generateSignature: function (contents) {
+  generateSignature (contents) {
     return Buffer.from(
       crypto
         .createSign("sha1")
@@ -168,7 +129,7 @@ ChromeExtension.prototype = {
         .sign(this.privateKey),
       "binary"
     );
-  },
+  }
 
   /**
    *
@@ -176,18 +137,20 @@ ChromeExtension.prototype = {
    *
    * @returns {Promise}
    */
-  loadContents: function () {
+  loadContents () {
     var selfie = this;
 
-    return new Promise(function(resolve, reject){
-      var archive = archiver('zip');
-      var contents = Buffer.from('');
+    return new Promise(function(resolve, reject) {
+      var archive = archiver("zip");
+      var contents = Buffer.from("");
 
       if (!selfie.loaded) {
-	      throw new Error('crx.load needs to be called first in order to prepare the workspace.');
+        throw new Error(
+          "crx.load needs to be called first in order to prepare the workspace."
+        );
       }
 
-      archive.on('error', reject);
+      archive.on("error", reject);
 
       /*
         TODO: Remove in v4.
@@ -196,11 +159,11 @@ ChromeExtension.prototype = {
 
         @see https://github.com/oncletom/crx/issues/61
       */
-      archive.on('data', function (buf) {
+      archive.on("data", function(buf) {
         contents = Buffer.concat([contents, buf]);
       });
 
-      archive.on('finish', function () {
+      archive.on("finish", function() {
         resolve(contents);
       });
 
@@ -208,11 +171,11 @@ ChromeExtension.prototype = {
         .glob(selfie.src, {
           cwd: selfie.path,
           matchBase: true,
-          ignore: ['*.pem', '.git', '*.crx']
+          ignore: ["*.pem", ".git", "*.crx"]
         })
         .finalize();
     });
-  },
+  }
 
   /**
    * Generates and returns a signed package from extension content.
@@ -224,7 +187,7 @@ ChromeExtension.prototype = {
    * @param {Buffer} contents
    * @returns {Buffer}
    */
-  generatePackage: function (signature, publicKey, contents) {
+  generatePackage (signature, publicKey, contents) {
     var keyLength = publicKey.length;
     var sigLength = signature.length;
     var zipLength = contents.length;
@@ -243,7 +206,7 @@ ChromeExtension.prototype = {
     contents.copy(crx, 16 + keyLength + sigLength);
 
     return crx;
-  },
+  }
 
   /**
    * Generates an appId from the publicKey.
@@ -255,20 +218,20 @@ ChromeExtension.prototype = {
    * @param {Buffer|string} [publicKey] the public key to use to generate the app ID
    * @returns {string}
    */
-  generateAppId: function (keyOrPath) {
+  generateAppId (keyOrPath) {
     keyOrPath = keyOrPath || this.publicKey;
 
-    if (typeof keyOrPath !== 'string' && !(keyOrPath instanceof Buffer)) {
-      throw new Error('Public key is neither set, nor given');
+    if (typeof keyOrPath !== "string" && !(keyOrPath instanceof Buffer)) {
+      throw new Error("Public key is neither set, nor given");
     }
 
     // Handling Windows Path
     // Possibly to be moved in a different method
-    if (typeof keyOrPath === 'string') {
+    if (typeof keyOrPath === "string") {
       var charCode = keyOrPath.charCodeAt(0);
 
       // 65 (A) < charCode < 122 (z)
-      if (charCode >= 65 && charCode <= 122 && keyOrPath[1] === ':') {
+      if (charCode >= 65 && charCode <= 122 && keyOrPath[1] === ":") {
         keyOrPath = keyOrPath[0].toUpperCase() + keyOrPath.slice(1);
 
         keyOrPath = Buffer.from(keyOrPath, "utf-16le");
@@ -281,10 +244,10 @@ ChromeExtension.prototype = {
       .digest()
       .toString("hex")
       .split("")
-      .map(x => (parseInt(x, 16) + 0x0A).toString(26))
+      .map(x => (parseInt(x, 16) + 0x0a).toString(26))
       .join("")
       .slice(0, 32);
-  },
+  }
 
   /**
    * Generates an updateXML file from the extension content.
@@ -293,20 +256,18 @@ ChromeExtension.prototype = {
    *
    * @returns {Buffer}
    */
-  generateUpdateXML: function () {
+  generateUpdateXML () {
     if (!this.codebase) {
       throw new Error("No URL provided for update.xml.");
     }
 
-    return Buffer.from(
-      "<?xml version='1.0' encoding='UTF-8'?>\n" +
-      "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
-      "  <app appid='" + (this.appId || this.generateAppId()) + "'>\n" +
-      "    <updatecheck codebase='" + this.codebase + "' version='" + this.manifest.version + "' />\n" +
-      "  </app>\n" +
-      "</gupdate>"
-    );
+    return Buffer.from(`<?xml version='1.0' encoding='UTF-8'?>
+<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
+  <app appid='${this.appId || this.generateAppId()}'>
+    <updatecheck codebase='${this.codebase}' version='${this.manifest.version}' />
+  </app>
+</gupdate>`);
   }
-};
+}
 
 module.exports = ChromeExtension;

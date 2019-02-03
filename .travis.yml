@@ -3,7 +3,20 @@ node_js:
 - v8
 - v10
 - node
+allow_failure:
+  - node_js: v8
+
 cache: npm
+
+before_script:
+  - npm i -g .
+
+script:
+  - npm test
+  - crx keygen ./test --force
+  - crx pack ./test/myFirstExtension -p ./test/key.pem -o test.crx
+  - crx pack ./test/myFirstExtension --zip-output test.zip
+
 deploy:
   provider: npm
   email: hi@oncletom.io
