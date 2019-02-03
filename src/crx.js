@@ -284,20 +284,12 @@ class ChromeExtension {
       throw new Error("No URL provided for update.xml.");
     }
 
-    return Buffer.from(
-      "<?xml version='1.0' encoding='UTF-8'?>\n" +
-        "<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>\n" +
-        "  <app appid='" +
-        (this.appId || this.generateAppId()) +
-        "'>\n" +
-        "    <updatecheck codebase='" +
-        this.codebase +
-        "' version='" +
-        this.manifest.version +
-        "' />\n" +
-        "  </app>\n" +
-        "</gupdate>"
-    );
+    return Buffer.from(`<?xml version='1.0' encoding='UTF-8'?>
+<gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
+  <app appid='${this.appId || this.generateAppId()}'>
+    <updatecheck codebase='${this.codebase}' version='${this.manifest.version}' />
+  </app>
+</gupdate>`);
   }
 }
 
