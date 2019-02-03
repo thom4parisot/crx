@@ -14,10 +14,11 @@
   },
   "main": "./src/crx.js",
   "engines": {
-    "node": ">=6"
+    "node": ">=10"
   },
   "scripts": {
     "test": "nyc tape ./test/*.js",
+    "posttest": "eslint src/*.js bin/crx.js",
     "version": "npm run changelog && git add CHANGELOG.md",
     "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version}  --only-pulls --use-commit-body"
   },
@@ -32,14 +33,15 @@
     ]
   },
   "dependencies": {
-    "archiver": "^2.1.1",
-    "commander": "^2.15.0",
-    "node-rsa": "^1.0.0"
+    "archiver": "^3.0.0",
+    "commander": "^2.19.0",
+    "node-rsa": "^1.0.3"
   },
   "devDependencies": {
-    "adm-zip": "^0.4.11",
+    "adm-zip": "^0.4.13",
+    "eslint": "^5.13.0",
     "github-changes": "^1.0.0",
-    "nyc": "^12.0.2",
-    "tape": "^4.9.0"
+    "nyc": "^13.1.0",
+    "tape": "^4.9.2"
   }
 }
