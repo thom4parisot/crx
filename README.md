@@ -2,15 +2,15 @@
 
 > crx is a utility to **package Google Chrome extensions** via a *Node API* and the *command line*. It is written **purely in JavaScript** and **does not require OpenSSL**!
 
+Massive hat tip to the [node-rsa project](https://npmjs.com/node-rsa) for the pure JavaScript encryption!
+
+**Compatibility**: this extension is compatible with `node>=0.10`.
+
 Packages are available to use `crx` with:
 
 - *grunt*: [grunt-crx](https://npmjs.com/grunt-crx)
 - *gulp*: [gulp-crx-pack](https://npmjs.com/gulp-crx-pack)
 - *webpack*: [crx-webpack-plugin](https://npmjs.com/crx-webpack-plugin)
-
-Massive hat tip to the [node-rsa project](https://npmjs.com/node-rsa) for the pure JavaScript encryption!
-
-**Compatibility**: this extension is compatible with `node>=10`.
 
 ## Install
 
@@ -18,7 +18,7 @@ Massive hat tip to the [node-rsa project](https://npmjs.com/node-rsa) for the pu
 $ npm install crx
 ```
 
-## Module API
+## crx API
 
 Asynchronous functions returns a native ECMAScript Promise.
 
@@ -46,12 +46,17 @@ crx.load( path.resolve(__dirname, './myExtension') )
   });
 ```
 
-### ChromeExtension = require("crx")
-### crx = new ChromeExtension(attrs)
+### `ChromeExtension(options)`
 
 This module exports the `ChromeExtension` constructor directly, which can take an optional attribute object, which is used to extend the instance.
 
-### crx.load(path|files)
+```js
+var ChromeExtension = require("crx");
+
+crx = new ChromeExtension({ ... });
+```
+
+### `crx.load(path|files)`
 
 Prepares the temporary workspace for the Chrome Extension located at `path` — which is expected to directly contain `manifest.json`.
 
@@ -69,7 +74,7 @@ crx.load(['/my/extension/manifest.json', '/my/extension/background.json']).then(
 });
 ```
 
-### crx.pack()
+### `crx.pack()`
 
 Packs the Chrome Extension and resolves the promise with a Buffer containing the `.crx` file.
 
@@ -81,7 +86,7 @@ crx.load('/path/to/extension')
   });
 ```
 
-### crx.generateUpdateXML()
+### `crx.generateUpdateXML()`
 
 Returns a Buffer containing the update.xml file used for `autoupdate`, as specified for `update_url` in the manifest. In this case, the instance must have a property called `codebase`.
 
@@ -103,6 +108,39 @@ Generates application id (extension id) from given path.
 
 ```js
 new crx().generateAppId('/path/to/ext') // epgkjnfaepceeghkjflpimappmlalchn
+
+## crypto API
+
+### `generateAppId(publicKey)`
+
+```js
+const crypto = require('crx/crypto');
+
+
+```
+
+### `generateAppIdFromPath(path)`
+
+```js
+const crypto = require('crx/crypto');
+
+
+```
+
+### `generatePrivateKey()`
+
+```js
+const crypto = require('crx/crypto');
+
+
+```
+
+### `generatePublicKey(privateKey[, format])`
+
+```js
+const crypto = require('crx/crypto');
+
+
 ```
 
 ## CLI API

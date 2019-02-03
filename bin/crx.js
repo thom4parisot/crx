@@ -2,10 +2,10 @@
 
 var path = require("path");
 var fs = require("fs");
-var rsa = require("node-rsa");
 var {promisify} = require("util");
 var writeFile = promisify(fs.writeFile);
 var readFile = promisify(fs.readFile);
+var {generatePrivateKey} = require("../crypto");
 
 var program = require("commander");
 var ChromeExtension = require("..");
@@ -44,16 +44,6 @@ program
 program.parse(process.argv);
 
 
-/**
- * Generate a new key file
- * @param {String} keyPath path of the key file to create
- * @returns {Promise}
- */
-function generateKeyFile(keyPath) {
-  return Promise.resolve(new rsa({ b: 2048 }))
-    .then(key => key.exportKey("pkcs1-private-pem"))
-    .then(keyVal => writeFile(keyPath, keyVal));
-}
 
 function keygen(dir, program) {
   dir = dir ? resolve(cwd, dir) : cwd;
@@ -65,7 +55,7 @@ function keygen(dir, program) {
       throw new Error("key.pem already exists in the given location.");
     }
 
-    generateKeyFile(keyPath);
+    generatePrivateKey().then(privateKey => writeFile(keyPath, privateKey));
   });
 }
 
@@ -96,26 +86,16 @@ function pack(dir, program) {
     }
   }
 
-  var crx = new ChromeExtension({
-    rootDirectory: input,
-    maxBuffer: program.maxBuffer
-  });
-
   readFile(keyPath)
-    .then(null, function(err) {
-      // If the key file doesn't exist, create one
-      if (err.code === "ENOENT") {
-        return generateKeyFile(keyPath);
-      } else {
-        throw err;
-      }
+    .then(function(privateKey) {
+      return new ChromeExtension({
+        rootDirectory: input,
+        maxBuffer: program.maxBuffer,
+        privateKey
+      });
     })
-    .then(function(key) {
-      crx.privateKey = key;
-    })
-    .then(function() {
-      crx
-        .load()
+    .then(function(crx) {
+      crx.load()
         .then(() => crx.loadContents())
         .then(function(fileBuffer) {
           if (program.zipOutput) {
