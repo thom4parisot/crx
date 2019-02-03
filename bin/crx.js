@@ -3,6 +3,9 @@
 var path = require("path");
 var fs = require("fs");
 var rsa = require("node-rsa");
+var {promisify} = require("util");
+var writeFile = promisify(fs.writeFile);
+var readFile = promisify(fs.readFile);
 
 var program = require("commander");
 var ChromeExtension = require("..");
@@ -40,22 +43,6 @@ program
 
 program.parse(process.argv);
 
-/**
- * Read a specified key file from disk
- * @param {String} keyPath path to the key to read
- * @returns {Promise}
- */
-function readKeyFile(keyPath) {
-  return new Promise(function(resolve, reject) {
-    fs.readFile(keyPath, function(err, data) {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(data);
-      }
-    });
-  });
-}
 
 /**
  * Generate a new key file
@@ -63,21 +50,9 @@ function readKeyFile(keyPath) {
  * @returns {Promise}
  */
 function generateKeyFile(keyPath) {
-  return new Promise(function(resolve) {
-    var key = new rsa({ b: 2048 }),
-      keyVal = key.exportKey("pkcs1-private-pem");
-
-    fs.writeFile(keyPath, keyVal, function(err) {
-      if (err) {
-        throw err;
-      }
-
-      // eslint-disable-next-line no-console
-      console.log("Key file has been generated at %s", keyPath);
-
-      resolve(keyVal);
-    });
-  });
+  return Promise.resolve(new rsa({ b: 2048 }))
+    .then(key => key.exportKey("pkcs1-private-pem"))
+    .then(keyVal => writeFile(keyPath, keyVal));
 }
 
 function keygen(dir, program) {
@@ -126,7 +101,7 @@ function pack(dir, program) {
     maxBuffer: program.maxBuffer
   });
 
-  readKeyFile(keyPath)
+  readFile(keyPath)
     .then(null, function(err) {
       // If the key file doesn't exist, create one
       if (err.code === "ENOENT") {
@@ -141,33 +116,35 @@ function pack(dir, program) {
     .then(function() {
       crx
         .load()
-        .then(function() {
-          return crx.loadContents();
-        })
-        .then(function(zipBuffer) {
+        .then(() => crx.loadContents())
+        .then(function(fileBuffer) {
           if (program.zipOutput) {
             var outFile = resolve(cwd, program.zipOutput);
 
-            fs.createWriteStream(outFile).end(zipBuffer);
+            fs.createWriteStream(outFile).end(fileBuffer);
           }
-
-          return crx.pack(zipBuffer);
+          else {
+            return crx.pack(fileBuffer);
+          }
         })
         .then(function(crxBuffer) {
-          if (program.output) {
+          if (program.zipOutput) {
+            return;
+          }
+          else if (program.output) {
             output = program.output;
-          } else {
+          }
+          else {
             output = path.basename(cwd) + ".crx";
           }
 
           var outFile = resolve(cwd, output);
-          (outFile ? fs.createWriteStream(outFile) : process.stdout).end(
-            crxBuffer
-          );
-        })
-        .then(function() {
-          // eslint-disable-next-line no-console
-          console.log("%s has been generated in %s", output, cwd);
+          if (outFile) {
+            fs.createWriteStream(outFile).end(crxBuffer);
+          }
+          else {
+            process.stdout.end(crxBuffer);
+          }
         });
     });
 }

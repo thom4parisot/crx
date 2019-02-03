@@ -15,7 +15,7 @@ script:
   - npm test
   - crx keygen ./test --force
   - crx pack ./test/myFirstExtension -p ./test/key.pem -o test.crx
-  - crx pack ./test/myFirstExtension -p ./test/key.pem -o test.zip --zip-output
+  - crx pack ./test/myFirstExtension --zip-output test.zip
 
 deploy:
   provider: npm
