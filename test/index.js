@@ -69,9 +69,7 @@ test('#writeFile', function(t){
 
   var crx = newCrx();
 
-  crx.writeFile('/tmp/crx', new Error('')).catch(function(err){
-    t.ok(err);
-  });
+  t.throws(() => crx.writeFile('/tmp/crx'));
 });
 
 test('#loadContents', function(t){

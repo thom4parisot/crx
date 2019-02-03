@@ -1,6 +1,5 @@
 "use strict";
 
-var fs = require("fs");
 var path = require("path");
 var join = path.join;
 var crypto = require("crypto");
@@ -84,28 +83,6 @@ class ChromeExtension {
     });
   }
 
-  /**
-   * Writes data into the extension workable directory.
-   *
-   * @deprecated
-   * @param {string} path
-   * @param {*} data
-   * @returns {Promise}
-   */
-  writeFile (path, data) {
-    var absPath = join(this.path, path);
-
-    /* istanbul ignore next */
-    return new Promise(function(resolve, reject) {
-      fs.writeFile(absPath, data, function(err) {
-        if (err) {
-          return reject(err);
-        }
-
-        resolve();
-      });
-    });
-  }
 
   /**
    * Generates a public key.
