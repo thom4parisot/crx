@@ -9,13 +9,13 @@ var join = require("path").join;
 var privateKey = fs.readFileSync(join(__dirname, "key.pem"));
 var updateXml = fs.readFileSync(join(__dirname, "expectations", "update.xml"));
 
-function newCrx(){
-  return new ChromeExtension({
+function newCrx(opts){
+  return new ChromeExtension(Object.assign({
     privateKey: privateKey,
     path: '/tmp',
     codebase: "http://localhost:8000/myFirstExtension.crx",
     rootDirectory: join(__dirname, "myFirstExtension")
-  });
+  }, opts));
 }
 
 test('#ChromeExtension', function(t){
@@ -54,11 +54,16 @@ test('#load', function(t){
 });
 
 test('#pack', function(t){
-  t.plan(1);
+  t.plan(2);
 
-  var crx = newCrx();
+  var crx2 = newCrx();
+  crx2.pack().then(function(packageData){
+    t.ok(packageData instanceof Buffer);
+  })
+  .catch(t.error.bind(t));
 
-  crx.pack().then(function(packageData){
+  var crx3 = newCrx({version: 3});
+  crx3.pack().then(function(packageData){
     t.ok(packageData instanceof Buffer);
   })
   .catch(t.error.bind(t));

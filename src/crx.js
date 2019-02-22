@@ -6,6 +6,7 @@ var crypto = require("crypto");
 var RSA = require("node-rsa");
 var archiver = require("archiver");
 var resolve = require("./resolver.js");
+var crx3 = require("./crx3.js");
 
 const DEFAULTS = {
   appId: null,
@@ -15,6 +16,7 @@ const DEFAULTS = {
   codebase: null,
   path: null,
   src: "**",
+  version: 2,
 };
 
 class ChromeExtension {
@@ -53,6 +55,10 @@ class ChromeExtension {
       var contents = outputs[1];
 
       selfie.publicKey = publicKey;
+
+      if (selfie.version === 3) {
+        return crx3(selfie.privateKey, publicKey, contents);
+      }
 
       var signature = selfie.generateSignature(contents);
 
