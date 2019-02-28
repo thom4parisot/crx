@@ -40,9 +40,9 @@
   },
   "devDependencies": {
     "adm-zip": "^0.4.13",
-    "eslint": "^5.13.0",
-    "github-changes": "^1.0.0",
-    "nyc": "^13.1.0",
-    "tape": "^4.9.2"
+    "eslint": "^5.14.1",
+    "github-changes": "^1.1.2",
+    "nyc": "^13.3.0",
+    "tape": "^4.10.1"
   }
 }
