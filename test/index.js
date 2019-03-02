@@ -5,6 +5,7 @@ var fs = require("fs");
 var test = require("tape");
 var Zip = require("adm-zip");
 var ChromeExtension = require("../");
+var {generateAppId} = require("../crypto.js");
 var join = require("path").join;
 var privateKey = fs.readFileSync(join(__dirname, "key.pem"));
 var updateXml = fs.readFileSync(join(__dirname, "expectations", "update.xml"));
@@ -138,23 +139,9 @@ test('#generatePublicKey', function(t) {
 });
 
 test('#generateAppId', function(t) {
-  t.plan(4);
+  t.plan(1);
 
-  t.throws(function() { newCrx().generateAppId(); }, /Public key is neither set, nor given/);
-
-  var crx = newCrx()
-
-  // from Public Key
-  crx.generatePublicKey().then(function(publicKey){
-    t.equals(crx.generateAppId(publicKey), 'eoilidhiokfphdhpmhoaengdkehanjif');
-  })
-  .catch(t.error.bind(t));
-
-  // from Linux Path
-  t.equals(crx.generateAppId('/usr/local/extension'), 'ioglhmppkolgcgoonkfdbjkcedfjhbcd');
-
-  // from Windows Path
-  t.equals(crx.generateAppId('c:\\a'), 'igchicfaapedlfgmepccnpolhajaphik');
+  t.throws(() => newCrx().generateAppId(), /is not a function/);
 });
 
 test('end to end', function (t) {

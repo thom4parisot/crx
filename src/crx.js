@@ -2,10 +2,9 @@
 
 var path = require("path");
 var join = path.join;
-var crypto = require("crypto");
-var RSA = require("node-rsa");
 var archiver = require("archiver");
 var resolve = require("./resolver.js");
+var {generateAppId, generatePublicKey, sign} = require("../crypto");
 
 const DEFAULTS = {
   appId: null,
@@ -98,19 +97,7 @@ class ChromeExtension {
    * });
    */
   generatePublicKey () {
-    var privateKey = this.privateKey;
-
-    return new Promise(function(resolve, reject) {
-      if (!privateKey) {
-        return reject(
-          "Impossible to generate a public key: privateKey option has not been defined or is empty."
-        );
-      }
-
-      var key = new RSA(privateKey);
-
-      resolve(key.exportKey("pkcs8-public-der"));
-    });
+    return generatePublicKey(this.privateKey, "der");
   }
 
   /**
@@ -122,13 +109,7 @@ class ChromeExtension {
    * @returns {Buffer}
    */
   generateSignature (contents) {
-    return Buffer.from(
-      crypto
-        .createSign("sha1")
-        .update(contents)
-        .sign(this.privateKey),
-      "binary"
-    );
+    return sign(contents, this.privateKey);
   }
 
   /**
@@ -209,62 +190,30 @@ class ChromeExtension {
   }
 
   /**
-   * Generates an appId from the publicKey.
-   * Public key has to be set for this to work, otherwise an error is thrown.
    *
-   * BC BREAK `this.appId` is not stored anymore (since 1.0.0)
-   * BC BREAK introduced `publicKey` parameter as it is not stored any more since 2.0.0
    *
-   * @param {Buffer|string} [publicKey] the public key to use to generate the app ID
-   * @returns {string}
+   *
+   * @returns
    */
-  generateAppId (keyOrPath) {
-    keyOrPath = keyOrPath || this.publicKey;
-
-    if (typeof keyOrPath !== "string" && !(keyOrPath instanceof Buffer)) {
-      throw new Error("Public key is neither set, nor given");
-    }
-
-    // Handling Windows Path
-    // Possibly to be moved in a different method
-    if (typeof keyOrPath === "string") {
-      var charCode = keyOrPath.charCodeAt(0);
-
-      // 65 (A) < charCode < 122 (z)
-      if (charCode >= 65 && charCode <= 122 && keyOrPath[1] === ":") {
-        keyOrPath = keyOrPath[0].toUpperCase() + keyOrPath.slice(1);
-
-        keyOrPath = Buffer.from(keyOrPath, "utf-16le");
-      }
-    }
-
-    return crypto
-      .createHash("sha256")
-      .update(keyOrPath)
-      .digest()
-      .toString("hex")
-      .split("")
-      .map(x => (parseInt(x, 16) + 0x0a).toString(26))
-      .join("")
-      .slice(0, 32);
-  }
-
   /**
    * Generates an updateXML file from the extension content.
    *
-   * BC BREAK `this.updateXML` is not stored anymore (since 1.0.0)
-   *
-   * @returns {Buffer}
+   * @param  {Object=} options
+   * @param  {String=} options.appId    AppId generated `generateAppId()` or `generateAppIdFromPath()`
+   * @param  {String=} options.codebase Absolute URL from which the self-hosted and signed extension will be accessible from.
+   * @return {Buffer}
    */
-  generateUpdateXML () {
+  generateUpdateXML (options={}) {
+    const {appId, codebase} = options;
+
     if (!this.codebase) {
       throw new Error("No URL provided for update.xml.");
     }
 
     return Buffer.from(`<?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
-  <app appid='${this.appId || this.generateAppId()}'>
-    <updatecheck codebase='${this.codebase}' version='${this.manifest.version}' />
+  <app appid='${appId || this.appId || generateAppId(this.publicKey)}'>
+    <updatecheck codebase='${codebase || this.codebase}' version='${this.manifest.version}' />
   </app>
 </gupdate>`);
   }
