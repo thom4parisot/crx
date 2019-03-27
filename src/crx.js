@@ -16,7 +16,7 @@ const DEFAULTS = {
   codebase: null,
   path: null,
   src: "**",
-  version: 2,
+  version: 3,
 };
 
 class ChromeExtension {
