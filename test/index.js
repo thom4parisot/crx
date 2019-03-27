@@ -18,25 +18,27 @@ function newCrx(opts){
   }, opts));
 }
 
-test('#ChromeExtension', function(t){
+const TESTS = {};
+
+TESTS.ChromeExtension = function(t, opts){
   t.plan(2);
 
   t.throws(() => ChromeExtension({}));
-  t.ok(newCrx());
-});
+  t.ok(newCrx(opts));
+};
 
 
-test('#load', function(t){
+TESTS.load = function(t, opts){
   t.plan(4);
 
-  newCrx().load().then(t.pass);
+  newCrx(opts).load().then(t.pass);
 
   var fileList = [
     'test/myFirstExtension/manifest.json',
     'test/myFirstExtension/icon.png',
   ];
 
-  newCrx().load(fileList).then(function(crx){
+  newCrx(opts).load(fileList).then(function(crx){
     t.ok(crx);
   });
 
@@ -44,47 +46,41 @@ test('#load', function(t){
     'test/myFirstExtension/icon.png'
   ];
 
-  newCrx().load(fileList).catch(function(err){
+  newCrx(opts).load(fileList).catch(function(err){
     t.ok(err);
   });
 
-  newCrx().load(Buffer.from('')).catch(function(err){
+  newCrx(opts).load(Buffer.from('')).catch(function(err){
     t.ok(err);
   })
-});
+};
 
-test('#pack', function(t){
-  t.plan(2);
-
-  var crx2 = newCrx();
-  crx2.pack().then(function(packageData){
-    t.ok(packageData instanceof Buffer);
-  })
-  .catch(t.error.bind(t));
-
-  var crx3 = newCrx({version: 3});
-  crx3.pack().then(function(packageData){
-    t.ok(packageData instanceof Buffer);
-  })
-  .catch(t.error.bind(t));
-});
-
-test('#writeFile', function(t){
+TESTS.pack = function(t, opts){
   t.plan(1);
 
-  var crx = newCrx();
+  var crx = newCrx(opts);
+  crx.pack().then(function(packageData){
+    t.ok(packageData instanceof Buffer);
+  })
+  .catch(t.error.bind(t));
+};
+
+TESTS.writeFile = function(t, opts){
+  t.plan(1);
+
+  var crx = newCrx(opts);
 
   t.throws(() => crx.writeFile('/tmp/crx'));
-});
+};
 
-test('#loadContents', function(t){
+TESTS.loadContents = function(t, opts){
   t.plan(3);
 
-  newCrx().loadContents().catch(function(err){
+  newCrx(opts).loadContents().catch(function(err){
     t.ok(err instanceof Error);
   });
 
-  var crx = newCrx();
+  var crx = newCrx(opts);
 
   crx.load().then(function(){
     return crx.loadContents();
@@ -109,15 +105,15 @@ test('#loadContents', function(t){
     return packageData;
   })
   .catch(t.error.bind(t));
-});
+};
 
 
-test('#generateUpdateXML', function(t){
+TESTS.generateUpdateXML = function(t, opts){
   t.plan(2);
 
   t.throws(() => new ChromeExtension({}).generateUpdateXML(), 'No URL provided for update.xml');
 
-  var crx = newCrx();
+  var crx = newCrx(opts);
 
   crx.pack().then(function(){
     var xmlBuffer = crx.generateUpdateXML();
@@ -125,29 +121,29 @@ test('#generateUpdateXML', function(t){
     t.equals(xmlBuffer.toString(), updateXml.toString());
   })
   .catch(t.error.bind(t));
-});
+};
 
-test('#generatePublicKey', function(t) {
+TESTS.generatePublicKey = function(t, opts) {
   t.plan(2);
 
-  var crx = newCrx();
+  var crx = newCrx(opts);
   crx.privateKey = null;
 
   crx.generatePublicKey().catch(function(err){
     t.ok(err);
   });
 
-  newCrx().generatePublicKey().then(function(publicKey){
+  newCrx(opts).generatePublicKey().then(function(publicKey){
     t.equals(publicKey.length, 162);
   });
-});
+};
 
-test('#generateAppId', function(t) {
+TESTS.generateAppId = function(t, opts) {
   t.plan(4);
 
-  t.throws(function() { newCrx().generateAppId(); }, /Public key is neither set, nor given/);
+  t.throws(function() { newCrx(opts).generateAppId(); }, /Public key is neither set, nor given/);
 
-  var crx = newCrx()
+  var crx = newCrx(opts)
 
   // from Public Key
   crx.generatePublicKey().then(function(publicKey){
@@ -160,10 +156,10 @@ test('#generateAppId', function(t) {
 
   // from Windows Path
   t.equals(crx.generateAppId('c:\\a'), 'igchicfaapedlfgmepccnpolhajaphik');
-});
+};
 
-test('end to end', function (t) {
-  var crx = newCrx();
+TESTS["end to end"] = function (t, opts) {
+  var crx = newCrx(opts);
 
   crx.load()
     .then(function(crx) {
@@ -174,4 +170,20 @@ test('end to end', function (t) {
       fs.writeFile('update.xml', crx.generateUpdateXML(), t.error);
     })
     .then(t.end);
+};
+
+// Setup list of different configurations to test
+// Each key is the test name prefix.
+// Each value is an options obect to be passed to test implementation.
+const TEST_OPTIONS = {
+  "": undefined, // use defaults
+  v2: {version: 2},
+  v3: {version: 3}
+};
+
+// Run whole list of tests for each of the configurations
+Reflect.ownKeys(TEST_OPTIONS).forEach(key => {
+  for (const name in TESTS) {
+    test(`${key}: ${name}`, t => TESTS[name](t, TEST_OPTIONS[key]));
+  }
 });
