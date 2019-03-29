@@ -107,9 +107,11 @@ new crx().generateAppId('/path/to/ext') // epgkjnfaepceeghkjflpimappmlalchn
 
 ## CLI API
 
-### crx pack [directory] [-o file] [--zip-output file] [-p private-key]
+### crx pack [directory] [--crx-version number] [-o file] [--zip-output file] [-p private-key]
 
 Pack the specified directory into a .crx package, and output it to stdout. If no directory is specified, the current working directory is used.
+
+Use the `--crx-version` option to specify which CRX format version to output. Can be either "2" or "3", defaults to "3".
 
 Use the `-o` option to write the signed extension to a file instead of stdout.
 
