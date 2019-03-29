@@ -62,7 +62,7 @@ program.parse(process.argv);
  */
 function generateKeyFile(keyPath, opts) {
   // Chromium (tested on 72.0.3626.109) which generates CRX v3 files requires pkcs8 key
-  var pkcs = "pkcs" + (opts.formatVersion === 3 ? "8" : "1") + "-private-pem";
+  var pkcs = "pkcs" + (opts.crxVersion === 2 ? "1" : "8") + "-private-pem";
 
   return Promise.resolve(new rsa({ b: 2048 }))
     .then(key => key.exportKey(pkcs))
@@ -114,7 +114,7 @@ function pack(dir, program) {
   var crx = new ChromeExtension({
     rootDirectory: input,
     maxBuffer: program.maxBuffer,
-    version: program.formatVersion
+    version: program.crxVersion || 3
   });
 
   readFile(keyPath)
