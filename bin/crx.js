@@ -24,8 +24,8 @@ program
   .command("keygen [directory]")
   .option("--force", "overwrite the private key if it exists")
   .option(
-    "-f, --format-version [number]",
-    "CRX format version, can be either 2 or 3",
+    "-c, --crx-version [number]",
+    "CRX format version, can be either 2 or 3, defaults to 3",
     parseInt
   )
   .description("generate a private key in [directory]/key.pem")
@@ -45,8 +45,8 @@ program
     "max amount of memory allowed to generate the crx, in byte"
   )
   .option(
-    "-f, --format-version [number]",
-    "CRX format version, can be either 2 or 3",
+    "-c, --crx-version [number]",
+    "CRX format version, can be either 2 or 3, defaults to 3",
     parseInt
   )
   .action(pack);
