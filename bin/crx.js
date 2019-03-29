@@ -23,6 +23,11 @@ program.version(pkg.version);
 program
   .command("keygen [directory]")
   .option("--force", "overwrite the private key if it exists")
+  .option(
+    "-c, --crx-version [number]",
+    "CRX format version, can be either 2 or 3, defaults to 3",
+    parseInt
+  )
   .description("generate a private key in [directory]/key.pem")
   .action(keygen);
 
@@ -39,6 +44,11 @@ program
     "-b, --max-buffer <total>",
     "max amount of memory allowed to generate the crx, in byte"
   )
+  .option(
+    "-c, --crx-version [number]",
+    "CRX format version, can be either 2 or 3, defaults to 3",
+    parseInt
+  )
   .action(pack);
 
 program.parse(process.argv);
@@ -47,12 +57,17 @@ program.parse(process.argv);
 /**
  * Generate a new key file
  * @param {String} keyPath path of the key file to create
+ * @param {Object} opts
  * @returns {Promise}
  */
-function generateKeyFile(keyPath) {
+function generateKeyFile(keyPath, opts) {
+  // Chromium (tested on 72.0.3626.109) which generates CRX v3 files requires pkcs8 key
+  var pkcs = "pkcs" + (opts.crxVersion === 2 ? "1" : "8") + "-private-pem";
+
   return Promise.resolve(new rsa({ b: 2048 }))
-    .then(key => key.exportKey("pkcs1-private-pem"))
-    .then(keyVal => writeFile(keyPath, keyVal));
+    .then(key => key.exportKey(pkcs))
+    .then(keyVal => writeFile(keyPath, keyVal))
+  ;
 }
 
 function keygen(dir, program) {
@@ -65,7 +80,7 @@ function keygen(dir, program) {
       throw new Error("key.pem already exists in the given location.");
     }
 
-    generateKeyFile(keyPath);
+    generateKeyFile(keyPath, program);
   });
 }
 
@@ -98,14 +113,15 @@ function pack(dir, program) {
 
   var crx = new ChromeExtension({
     rootDirectory: input,
-    maxBuffer: program.maxBuffer
+    maxBuffer: program.maxBuffer,
+    version: program.crxVersion || 3
   });
 
   readFile(keyPath)
     .then(null, function(err) {
       // If the key file doesn't exist, create one
       if (err.code === "ENOENT") {
-        return generateKeyFile(keyPath);
+        return generateKeyFile(keyPath, program).then(() => readFile(keyPath));
       } else {
         throw err;
       }
