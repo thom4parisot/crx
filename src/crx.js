@@ -267,10 +267,14 @@ class ChromeExtension {
       throw new Error("No URL provided for update.xml.");
     }
 
+    var browserVersion = this.manifest.minimum_chrome_version
+      || (this.version < 3 && "29.0.0") // Earliest API available: https://developer.chrome.com/extensions/api_index
+      || "70.0.0"; // Around one year after Chromium started generating CRX3 packages
+
     return Buffer.from(`<?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
   <app appid='${this.appId || this.generateAppId()}'>
-    <updatecheck codebase='${this.codebase}' version='${this.manifest.version}' />
+    <updatecheck codebase='${this.codebase}' version='${this.manifest.version}' prodversionmin='${browserVersion}' />
   </app>
 </gupdate>`);
   }

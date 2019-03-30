@@ -7,7 +7,9 @@ var Zip = require("adm-zip");
 var ChromeExtension = require("../");
 var join = require("path").join;
 var privateKey = fs.readFileSync(join(__dirname, "key.pem"));
-var updateXml = fs.readFileSync(join(__dirname, "expectations", "update.xml"));
+var updateXml2 = fs.readFileSync(join(__dirname, "expectations", "updateCRX2.xml"));
+var updateXml3 = fs.readFileSync(join(__dirname, "expectations", "updateCRX3.xml"));
+var updateXmlCustom = fs.readFileSync(join(__dirname, "expectations", "updateProdVersionMin.xml"));
 
 function newCrx(opts){
   return new ChromeExtension(Object.assign({
@@ -109,18 +111,30 @@ TESTS.loadContents = function(t, opts){
 
 
 TESTS.generateUpdateXML = function(t, opts){
-  t.plan(2);
+  t.plan(3);
 
   t.throws(() => new ChromeExtension({}).generateUpdateXML(), 'No URL provided for update.xml');
 
   var crx = newCrx(opts);
+  var expected = crx.version === 2 ? updateXml2 : updateXml3; 
 
   crx.pack().then(function(){
     var xmlBuffer = crx.generateUpdateXML();
 
-    t.equals(xmlBuffer.toString(), updateXml.toString());
+    t.equals(xmlBuffer.toString(), expected.toString());
   })
   .catch(t.error.bind(t));
+
+  var crxCustom = newCrx(opts);
+  crxCustom.load().then(() => {
+    crxCustom.manifest.minimum_chrome_version = '99.99.99-crxtest';
+    crxCustom.pack().then(function(){
+      var xmlBuffer = crxCustom.generateUpdateXML();
+
+      t.equals(xmlBuffer.toString(), updateXmlCustom.toString());
+    })
+    .catch(t.error.bind(t));
+  });
 };
 
 TESTS.generatePublicKey = function(t, opts) {
