@@ -258,8 +258,18 @@ class ChromeExtension {
   /**
    * Generates an updateXML file from the extension content.
    *
+   * If manifest does not include `minimum_chrome_version`, defaults to:
+   * - '29.0.0' for CRX2, which is earliest extensions API available
+   * - '70.0.0' for CRX3, which is around one year after Chromium switched to generating CRX3 packages
+   *
    * BC BREAK `this.updateXML` is not stored anymore (since 1.0.0)
    *
+   * @see
+   *   [Chrome Extensions APIs]{@link https://developer.chrome.com/extensions/api_index}
+   * @see
+   *   [Chrome verions]{@link https://en.wikipedia.org/wiki/Google_Chrome_version_history}
+   * @see
+   *   [Chromium switches to CRX3]{@link https://chromium.googlesource.com/chromium/src.git/+/b8bc9f99ef4ad6223dfdcafd924051561c05ac75}
    * @returns {Buffer}
    */
   generateUpdateXML () {
@@ -268,7 +278,7 @@ class ChromeExtension {
     }
 
     var browserVersion = this.manifest.minimum_chrome_version
-      || (this.version < 3 && "29.0.0") // Earliest API available: https://developer.chrome.com/extensions/api_index
+      || (this.version < 3 && "29.0.0") // Earliest version with extensions API
       || "70.0.0"; // Around one year after Chromium started generating CRX3 packages
 
     return Buffer.from(`<?xml version='1.0' encoding='UTF-8'?>
