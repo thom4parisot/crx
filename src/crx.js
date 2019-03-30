@@ -6,6 +6,7 @@ var crypto = require("crypto");
 var RSA = require("node-rsa");
 var archiver = require("archiver");
 var resolve = require("./resolver.js");
+var crx2 = require("./crx2.js");
 var crx3 = require("./crx3.js");
 
 const DEFAULTS = {
@@ -56,13 +57,11 @@ class ChromeExtension {
 
       selfie.publicKey = publicKey;
 
-      if (selfie.version === 3) {
-        return crx3(selfie.privateKey, publicKey, contents);
+      if (selfie.version === 2) {
+        return crx2(selfie.privateKey, publicKey, contents);
       }
 
-      var signature = selfie.generateSignature(contents);
-
-      return selfie.generatePackage(signature, publicKey, contents);
+      return crx3(selfie.privateKey, publicKey, contents);
     });
   }
 
@@ -88,7 +87,6 @@ class ChromeExtension {
       return selfie;
     });
   }
-
 
   /**
    * Generates a public key.
@@ -117,24 +115,6 @@ class ChromeExtension {
 
       resolve(key.exportKey("pkcs8-public-der"));
     });
-  }
-
-  /**
-   * Generates a SHA1 package signature.
-   *
-   * BC BREAK `this.signature` is not stored anymore (since 1.0.0)
-   *
-   * @param {Buffer} contents
-   * @returns {Buffer}
-   */
-  generateSignature (contents) {
-    return Buffer.from(
-      crypto
-        .createSign("sha1")
-        .update(contents)
-        .sign(this.privateKey),
-      "binary"
-    );
   }
 
   /**
@@ -181,37 +161,6 @@ class ChromeExtension {
         })
         .finalize();
     });
-  }
-
-  /**
-   * Generates and returns a signed package from extension content.
-   *
-   * BC BREAK `this.package` is not stored anymore (since 1.0.0)
-   *
-   * @param {Buffer} signature
-   * @param {Buffer} publicKey
-   * @param {Buffer} contents
-   * @returns {Buffer}
-   */
-  generatePackage (signature, publicKey, contents) {
-    var keyLength = publicKey.length;
-    var sigLength = signature.length;
-    var zipLength = contents.length;
-    var length = 16 + keyLength + sigLength + zipLength;
-
-    var crx = Buffer.alloc(length);
-
-    crx.write("Cr24" + new Array(13).join("\x00"), "binary");
-
-    crx[4] = 2;
-    crx.writeUInt32LE(keyLength, 8);
-    crx.writeUInt32LE(sigLength, 12);
-
-    publicKey.copy(crx, 16);
-    signature.copy(crx, 16 + keyLength);
-    contents.copy(crx, 16 + keyLength + sigLength);
-
-    return crx;
   }
 
   /**
