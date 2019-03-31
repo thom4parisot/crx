@@ -260,7 +260,7 @@ class ChromeExtension {
    *
    * If manifest does not include `minimum_chrome_version`, defaults to:
    * - '29.0.0' for CRX2, which is earliest extensions API available
-   * - '70.0.0' for CRX3, which is around one year after Chromium switched to generating CRX3 packages
+   * - '64.0.3242' for CRX3, which is when Chrome etension packager switched to CRX3
    *
    * BC BREAK `this.updateXML` is not stored anymore (since 1.0.0)
    *
@@ -279,7 +279,7 @@ class ChromeExtension {
 
     var browserVersion = this.manifest.minimum_chrome_version
       || (this.version < 3 && "29.0.0") // Earliest version with extensions API
-      || "70.0.0"; // Around one year after Chromium started generating CRX3 packages
+      || "64.0.3242"; // Chrome started generating CRX3 packages
 
     return Buffer.from(`<?xml version='1.0' encoding='UTF-8'?>
 <gupdate xmlns='http://www.google.com/update2/response' protocol='2.0'>
