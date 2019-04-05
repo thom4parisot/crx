@@ -8,7 +8,7 @@ var writeFile = promisify(fs.writeFile);
 var readFile = promisify(fs.readFile);
 
 var program = require("commander");
-var ChromeExtension = require("..");
+var ChromeExtension = require(".");
 var pkg = require("../package.json");
 
 var resolve = path.resolve;
