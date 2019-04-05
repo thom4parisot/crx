@@ -5,20 +5,20 @@
   "version": "4.0.1",
   "license": "MIT",
   "homepage": "https://github.com/oncletom/crx",
-  "bin": {
-    "crx": "./bin/crx.js"
-  },
   "repository": {
     "type": "git",
     "url": "git://github.com/oncletom/crx.git"
   },
-  "main": "./src/crx.js",
+  "main": "./src/index.js",
+  "bin": {
+    "crx": "./src/cli.js"
+  },
   "engines": {
     "node": ">=10"
   },
   "scripts": {
     "test": "nyc tape ./test/*.js",
-    "posttest": "eslint src/*.js bin/crx.js",
+    "posttest": "eslint src/*.js",
     "version": "npm run changelog && git add CHANGELOG.md",
     "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version}  --only-pulls --use-commit-body"
   },
