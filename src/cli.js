@@ -39,7 +39,9 @@ program
     "write the crx content to <file> instead of stdout"
   )
   .option("--zip-output <file>", "write the zip content to <file>")
-  .option("-p, --private-key <file>", "relative path to private key [key.pem]")
+  .option(
+    "-p, --private-key <file>",
+    "relative path to private key [key.pem], defaults to [directory/../key.pem]")
   .option(
     "-b, --max-buffer <total>",
     "max amount of memory allowed to generate the crx, in byte"
@@ -88,7 +90,7 @@ function pack(dir, program) {
   var input = dir ? resolve(cwd, dir) : cwd;
   var keyPath = program.privateKey
     ? resolve(cwd, program.privateKey)
-    : join(input, "key.pem");
+    : join(input, "..", "key.pem");
   var output;
 
   if (program.output) {
@@ -121,7 +123,10 @@ function pack(dir, program) {
     .then(null, function(err) {
       // If the key file doesn't exist, create one
       if (err.code === "ENOENT") {
-        return generateKeyFile(keyPath, program).then(() => readFile(keyPath));
+        return generateKeyFile(keyPath, program).then(() => {
+          process.stderr.write("Created new private key at: " + keyPath + ".\n");
+          return readFile(keyPath);
+        });
       } else {
         throw err;
       }
