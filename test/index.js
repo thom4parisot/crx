@@ -31,10 +31,21 @@ TESTS.ChromeExtension = function(t, opts){
 
 
 TESTS.load = function(t, opts){
-  t.plan(4);
+  t.plan(6);
 
   newCrx(opts).load().then(t.pass);
 
+  // Test relative path
+  newCrx().load("./test/myFirstExtension").then(function(crx){
+    t.ok(crx);
+  }).catch(t.error.bind(t));
+
+  // Test absolute path
+  newCrx().load(join(__dirname, "myFirstExtension")).then(function(crx){
+    t.ok(crx);
+  }).catch(t.error.bind(t));
+
+  // Test list of files
   var fileList = [
     'test/myFirstExtension/manifest.json',
     'test/myFirstExtension/icon.png',

@@ -7,7 +7,7 @@ module.exports = function resolve(pathOrFiles) {
     // legacy and original mode
     if (typeof pathOrFiles === "string") {
       return resolve({
-        path: pathOrFiles,
+        path: path.resolve(pathOrFiles),
         src: "**"
       });
     }
