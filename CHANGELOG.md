@@ -1,6 +1,17 @@
 ## Change Log
 
-### 4.0.1 (2019/02/03 16:16 +00:00)
+### 5.0.0 (2019/04/17 07:50 +00:00)
+- [#105](https://github.com/oncletom/crx/pull/105) Update dependencies and prepare for new release (v5.0.0) (@ahwayakchih)
+- [#104](https://github.com/oncletom/crx/pull/104) fix: create private key file outside extension directory by default (@ahwayakchih)
+- [#103](https://github.com/oncletom/crx/pull/103) Move CLI script to src folder (@arkon)
+- [#100](https://github.com/oncletom/crx/pull/100) Move CRX2 logic to separate file (@arkon)
+- [#102](https://github.com/oncletom/crx/pull/102) feat: use `manifest.minimum_chrome_version` as XML's `prodversionmin` (@ahwayakchih)
+- [#99](https://github.com/oncletom/crx/pull/99) docs: add `--crx-format` to README (@ahwayakchih)
+- [#98](https://github.com/oncletom/crx/pull/98) feat: add support for CRXv3 (@ahwayakchih)
+- [#97](https://github.com/oncletom/crx/pull/97) chore: update dependencies (#97) (@ahwayakchih)
+- [#78](https://github.com/oncletom/crx/pull/78) Add generateAppId sample (#78) (@NN---)
+
+### v4.0.1 (2019/02/03 16:17 +00:00)
 - [#96](https://github.com/oncletom/crx/pull/96) Remove deprecated crx.writeFile() (@oncletom)
 
 ### v4.0.0 (2019/02/03 15:57 +00:00)
