@@ -33,7 +33,7 @@
     ]
   },
   "dependencies": {
-    "archiver": "^3.0.0",
+    "archiver": "^3.0.3",
     "commander": "^2.20.0",
     "node-rsa": "^1.0.5",
     "pbf": "^3.2.0"
@@ -42,7 +42,7 @@
     "adm-zip": "^0.4.13",
     "eslint": "^5.16.0",
     "github-changes": "^1.1.2",
-    "nyc": "^14.0.0",
-    "tape": "^4.10.1"
+    "nyc": "^14.1.1",
+    "tape": "^4.11.0"
   }
 }
