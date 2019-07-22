@@ -1,6 +1,10 @@
 ## Change Log
 
-### 5.0.0 (2019/04/17 07:50 +00:00)
+### 5.0.1 (2019/07/22 09:57 +00:00)
+- [#107](https://github.com/oncletom/crx/pull/107) fix: loading relative path (@ahwayakchih)
+
+### v5.0.0 (2019/04/17 08:00 +00:00)
+- [#106](https://github.com/oncletom/crx/pull/106) chore: update CHANGELOG (@ahwayakchih)
 - [#105](https://github.com/oncletom/crx/pull/105) Update dependencies and prepare for new release (v5.0.0) (@ahwayakchih)
 - [#104](https://github.com/oncletom/crx/pull/104) fix: create private key file outside extension directory by default (@ahwayakchih)
 - [#103](https://github.com/oncletom/crx/pull/103) Move CLI script to src folder (@arkon)
@@ -49,7 +53,7 @@
 - [#37](https://github.com/oncletom/crx/pull/37) fix pack instruction in Module example (@qbarlas)
 
 ### v2.0.1 (2015/01/15 18:28 +00:00)
-- [#34](https://github.com/oncletom/crx/pull/34) Fix various issues with CLI and creating .pem and .crx files (@lepolt)
+- [#34](https://github.com/oncletom/crx/pull/34) Fix various issues with CLI and creating .pem and .crx files (@Batterii)
 - [#35](https://github.com/oncletom/crx/pull/35) destroy() is not used (@okuryu)
 - [#26](https://github.com/oncletom/crx/pull/26) fixes minor code problems, such as missing semicolons, etc. (@joscha)
 - [#29](https://github.com/oncletom/crx/pull/29) generatePublicKey promise and generateAppId state (@joscha)
