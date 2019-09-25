@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "archiver": "3.0.3",
+    "buffer-builder": "^0.2.0",
     "commander": "2.20.0",
     "node-rsa": "1.0.5",
     "pbf": "3.2.0"

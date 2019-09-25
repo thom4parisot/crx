@@ -8,6 +8,7 @@ var archiver = require("archiver");
 var resolve = require("./resolver.js");
 var crx2 = require("./crx2.js");
 var crx3 = require("./crx3.js");
+var BufferBuilder = require("buffer-builder"); 
 
 const DEFAULTS = {
   appId: null,
@@ -128,7 +129,7 @@ class ChromeExtension {
 
     return new Promise(function(resolve, reject) {
       var archive = archiver("zip");
-      var contents = Buffer.from("");
+      var contents = new BufferBuilder();
 
       if (!selfie.loaded) {
         throw new Error(
@@ -146,11 +147,11 @@ class ChromeExtension {
         @see https://github.com/oncletom/crx/issues/61
       */
       archive.on("data", function(buf) {
-        contents = Buffer.concat([contents, buf]);
+        contents.appendBuffer(buf);
       });
 
       archive.on("finish", function() {
-        resolve(contents);
+        resolve(contents.get());
       });
 
       archive
