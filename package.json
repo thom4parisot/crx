@@ -1,23 +1,23 @@
 {
-  "author": "Jed Schmidt <tr@nslator.jp> (http://jed.is)",
+  "author": "apty Inc.",
   "name": "crx",
   "description": "crx is a utility to package Google Chrome extensions via a Node API and the command line",
   "version": "5.0.1",
   "license": "MIT",
-  "homepage": "https://github.com/oncletom/crx",
+  "homepage": "https://github.com/aptyInc/crx",
   "repository": {
     "type": "git",
-    "url": "git://github.com/oncletom/crx.git"
+    "url": "git://github.com/aptyInc/crx.git"
   },
-  "main": "./src/index.js",
+  "main": "src/index.js",
   "bin": {
-    "crx": "./src/cli.js"
+    "crx": "src/cli.js"
   },
   "engines": {
     "node": ">=10"
   },
   "scripts": {
-    "test": "nyc tape ./test/*.js",
+    "test": "nyc tape test/*.js",
     "posttest": "eslint src/*.js",
     "version": "npm run changelog && git add CHANGELOG.md",
     "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version}  --only-pulls --use-commit-body"
@@ -33,16 +33,16 @@
     ]
   },
   "dependencies": {
-    "archiver": "^3.0.3",
-    "commander": "^2.20.0",
-    "node-rsa": "^1.0.5",
-    "pbf": "^3.2.0"
+    "archiver": "3.0.3",
+    "commander": "2.20.0",
+    "node-rsa": "1.0.5",
+    "pbf": "3.2.0"
   },
   "devDependencies": {
-    "adm-zip": "^0.4.13",
-    "eslint": "^5.16.0",
-    "github-changes": "^1.1.2",
-    "nyc": "^14.1.1",
-    "tape": "^4.11.0"
+    "adm-zip": "0.4.13",
+    "eslint": "5.16.0",
+    "github-changes": "1.1.2",
+    "nyc": "14.1.1",
+    "tape": "4.11.0"
   }
 }
