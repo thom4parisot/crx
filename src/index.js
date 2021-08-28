@@ -127,7 +127,7 @@ class ChromeExtension {
     var selfie = this;
 
     return new Promise(function(resolve, reject) {
-      var archive = archiver("zip");
+      var archive = archiver("zip", { zlib: { level: 9 }});
       var contents = Buffer.from("");
 
       if (!selfie.loaded) {
