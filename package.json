@@ -41,7 +41,7 @@
   "devDependencies": {
     "adm-zip": "^0.4.13",
     "eslint": "^5.16.0",
-    "github-changes": "^1.1.2",
+    "github-changes": "^2.0.0",
     "nyc": "^14.1.1",
     "tape": "^4.11.0"
   }
