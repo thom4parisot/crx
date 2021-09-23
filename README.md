@@ -47,9 +47,22 @@ crx.load( path.resolve(__dirname, './myExtension') )
 ```
 
 ### ChromeExtension = require("crx")
-### crx = new ChromeExtension(attrs)
+### crx = new ChromeExtension(attrs?)
 
 This module exports the `ChromeExtension` constructor directly, which can take an optional attribute object, which is used to extend the instance.
+
+`attrs` is an optional object with advanced configuration elements:
+
+```js
+crx = new ChromeExtension({
+  // By default, we exclude bundling crx extensions within extensions
+  // You can change that, and ignore other files as well
+  ignore: ['*.crx']
+  // By default, it produces extensions compatible with CRX version 3 (since Chromium 64)
+  // CRX version 2 is for Chromium versions prior to 64
+  version: 3
+})
+```
 
 ### crx.load(path|files)
 

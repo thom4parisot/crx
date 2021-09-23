@@ -2,12 +2,13 @@ name: Node.js Unit Tests
 
 on:
   push:
+    branches:
+      - master
   pull_request:
 
 jobs:
   build-front:
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow-failure || false }}
 
     strategy:
       matrix:
@@ -30,6 +31,7 @@ jobs:
 
     - name: Install and run tests
       run: npm install-ci-test
+      continue-on-error: ${{ matrix.allow-failure || false }}
 
     - name: Run CLI commands
       run: |
