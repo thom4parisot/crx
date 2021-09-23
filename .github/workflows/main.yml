@@ -7,7 +7,7 @@ on:
 jobs:
   build-front:
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow-failure or false }}
+    continue-on-error: ${{ matrix.allow-failure || false }}
 
     strategy:
       matrix:
