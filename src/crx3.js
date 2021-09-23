@@ -2,7 +2,7 @@
 
 var PBf = require("pbf");
 var crypto = require("crypto");
-var crx = require("./crx3.js.pb");
+var crx = require("./crx3.pb.js");
 
 /**
  * Generates and returns a signed package from extension content.
@@ -102,8 +102,8 @@ function getCrxId (publicKey) {
 /**
 * Generates and returns a signature.
 *
-* @param {Buffer} privateKey
-* @param {Buffer} signedHeaderData
+* @param {crypto.KeyLike} privateKey
+* @param {Uint8Array} signedHeaderData
 * @param {Buffer} contents
 * @returns {Buffer}
 */
@@ -124,5 +124,5 @@ function generateSignature (privateKey, signedHeaderData, contents) {
   // ZIP content
   hash.update(contents);
 
-  return Buffer.from(hash.sign(privateKey), "binary");
+  return Buffer.from(hash.sign(privateKey).toString(), "binary");
 }

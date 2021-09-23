@@ -2,6 +2,16 @@
 
 var path = require("path");
 
+/**
+ * @typedef {Object} PathMetadata
+ * @property {string} path
+ * @property {string} src
+ */
+
+/**
+ * @param {string | Array.<string>} pathOrFiles
+ * @returns Promise<PathMetadata>
+ */
 module.exports = function resolve(pathOrFiles) {
   return new Promise(function(resolve, reject) {
     // legacy and original mode

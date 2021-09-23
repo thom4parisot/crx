@@ -9,31 +9,76 @@ var resolve = require("./resolver.js");
 var crx2 = require("./crx2.js");
 var crx3 = require("./crx3.js");
 
-const DEFAULTS = {
-  appId: null,
-  rootDirectory: "",
-  publicKey: null,
-  privateKey: null,
-  codebase: null,
-  path: null,
-  src: "**",
-  ignore: ["*.crx"],
-  version: 3,
+/** @typedef { import("./resolver").PathMetadata } PathMetadata */
+
+/** @enum {number} CrxVersion */
+const CrxVersion = {
+  VERSION_2: 2,
+  VERSION_3: 3
 };
 
-class ChromeExtension {
-  constructor(attrs) {
-    // Setup defaults
-    Object.assign(this, DEFAULTS, attrs);
+/**
+ * @typedef {Object} BrowserManifest
+ * @property {string} minimum_chrome_version
+ * @property {string} version
+ */
 
+/**
+ * @typedef {Object} BrowserExtensionOptions
+ */
+
+
+/**
+ * @class BrowserExtension
+ */
+class ChromeExtension {
+  /**
+   * @constructor
+   * @param {BrowserExtensionOptions} attrs
+   */
+  constructor(attrs) {
+    /** @type {string | null} */
+    this.appId = null;
+
+    /** @type {string} */
+    this.rootDirectory = "";
+
+    /** @type {Buffer} */
+    this.publicKey;
+
+    /** @type {Buffer} */
+    this.privateKey;
+
+    /** @type {string | null} */
+    this.codebase = null;
+
+    /** @type {string} */
+    this.path;
+
+    /** @type {string} */
+    this.src = "**";
+
+    /** @type {Array.<string>} */
+    this.ignore = ["*.crx"];
+
+    /** @type {CrxVersion} */
+    this.version = 3;
+
+    // Setup defaults
+    Object.assign(this, attrs);
+
+    /** @type {boolean} */
     this.loaded = false;
+
+    /** @type {BrowserManifest} */
+    this.manifest;
   }
 
   /**
    * Packs the content of the extension in a crx file.
    *
    * @param {Buffer=} contentsBuffer
-   * @returns {Promise}
+   * @returns {Promise<Buffer>}
    * @example
    *
    * crx.pack().then(function(crxContent){
@@ -46,23 +91,22 @@ class ChromeExtension {
       return this.load().then(this.pack.bind(this, contentsBuffer));
     }
 
-    var selfie = this;
     var packP = [
       this.generatePublicKey(),
-      contentsBuffer || selfie.loadContents()
+      contentsBuffer || this.loadContents()
     ];
 
-    return Promise.all(packP).then(function(outputs) {
+    return Promise.all(packP).then((outputs) => {
       var publicKey = outputs[0];
       var contents = outputs[1];
 
-      selfie.publicKey = publicKey;
+      this.publicKey = publicKey;
 
-      if (selfie.version === 2) {
-        return crx2(selfie.privateKey, publicKey, contents);
+      if (this.version === 2) {
+        return crx2(this.privateKey, publicKey, contents);
       }
 
-      return crx3(selfie.privateKey, publicKey, contents);
+      return crx3(this.privateKey, publicKey, contents);
     });
   }
 
@@ -70,22 +114,20 @@ class ChromeExtension {
    * Loads extension manifest and copies its content to a workable path.
    *
    * @param {string=} path
-   * @returns {Promise}
+   * @returns {Promise<ChromeExtension>}
    */
   load (path) {
-    var selfie = this;
+    return resolve(path || this.rootDirectory).then((metadata) => {
+      this.path = metadata.path;
+      this.src = metadata.src;
 
-    return resolve(path || selfie.rootDirectory).then(function(metadata) {
-      selfie.path = metadata.path;
-      selfie.src = metadata.src;
-
-      var manifestPath = join(selfie.path, "manifest.json");
+      var manifestPath = join(this.path, "manifest.json");
       delete require.cache[manifestPath];
 
-      selfie.manifest = require(manifestPath);
-      selfie.loaded = true;
+      this.manifest = require(manifestPath);
+      this.loaded = true;
 
-      return selfie;
+      return this;
     });
   }
 
@@ -95,7 +137,7 @@ class ChromeExtension {
    * BC BREAK `this.publicKey` is not stored anymore (since 1.0.0)
    * BC BREAK callback parameter has been removed in favor to the promise interface.
    *
-   * @returns {Promise} Resolves to {Buffer} containing the public key
+   * @returns {Promise<Buffer>} Resolves to {Buffer} containing the public key
    * @example
    *
    * crx.generatePublicKey(function(publicKey){
@@ -122,16 +164,14 @@ class ChromeExtension {
    *
    * BC BREAK `this.contents` is not stored anymore (since 1.0.0)
    *
-   * @returns {Promise}
+   * @returns {Promise<Buffer>}
    */
   loadContents () {
-    var selfie = this;
-
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       var archive = archiver("zip", { zlib: { level: 9 }});
       var contents = Buffer.from("");
 
-      if (!selfie.loaded) {
+      if (!this.loaded) {
         throw new Error(
           "crx.load needs to be called first in order to prepare the workspace."
         );
@@ -155,10 +195,10 @@ class ChromeExtension {
       });
 
       archive
-        .glob(selfie.src, {
-          cwd: selfie.path,
+        .glob(this.src, {
+          cwd: this.path,
           matchBase: true,
-          ignore: ["*.pem", ".git"].concat(selfie.ignore)
+          ignore: ["*.pem", ".git"].concat(this.ignore)
         })
         .finalize();
     });
@@ -171,7 +211,7 @@ class ChromeExtension {
    * BC BREAK `this.appId` is not stored anymore (since 1.0.0)
    * BC BREAK introduced `publicKey` parameter as it is not stored any more since 2.0.0
    *
-   * @param {Buffer|string} [publicKey] the public key to use to generate the app ID
+   * @param {Buffer|string} [keyOrPath] the public key to use to generate the app ID
    * @returns {string}
    */
   generateAppId (keyOrPath) {
@@ -190,7 +230,7 @@ class ChromeExtension {
       if (charCode >= 65 && charCode <= 122 && keyOrPath[1] === ":") {
         keyOrPath = keyOrPath[0].toUpperCase() + keyOrPath.slice(1);
 
-        keyOrPath = Buffer.from(keyOrPath, "utf-16le");
+        keyOrPath = Buffer.from(keyOrPath, "utf16le");
       }
     }
 
@@ -214,12 +254,9 @@ class ChromeExtension {
    *
    * BC BREAK `this.updateXML` is not stored anymore (since 1.0.0)
    *
-   * @see
-   *   [Chrome Extensions APIs]{@link https://developer.chrome.com/extensions/api_index}
-   * @see
-   *   [Chrome verions]{@link https://en.wikipedia.org/wiki/Google_Chrome_version_history}
-   * @see
-   *   [Chromium switches to CRX3]{@link https://chromium.googlesource.com/chromium/src.git/+/b8bc9f99ef4ad6223dfdcafd924051561c05ac75}
+   * [Chrome Extensions APIs]{@link https://developer.chrome.com/extensions/api_index}
+   * [Chrome verions]{@link https://en.wikipedia.org/wiki/Google_Chrome_version_history}
+   * [Chromium switches to CRX3]{@link https://chromium.googlesource.com/chromium/src.git/+/b8bc9f99ef4ad6223dfdcafd924051561c05ac75}
    * @returns {Buffer}
    */
   generateUpdateXML () {
