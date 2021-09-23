@@ -1,0 +1,39 @@
+name: Node.js Unit Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-front:
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allow-failure }}
+
+    strategy:
+      matrix:
+        node-version: [8.x, 10.x, 14.x]
+        os: [ubuntu-latest]
+        include:
+          - node-version: 8.x
+            allow-failure: true
+          - node-version: 14.x
+            os: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Install and run tests
+      run: npm install-ci-test
+
+    - name: Run CLI commands
+      run: |
+        npm install --global .
+
+        crx keygen ./test --force
+        crx pack ./test/myFirstExtension -p ./test/key.pem -o test.crx
+        crx pack ./test/myFirstExtension --zip-output test.zip
