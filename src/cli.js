@@ -20,6 +20,18 @@ program.version(pkg.version);
 // coming soon
 // .option("-x, --xml", "output autoupdate xml instead of extension ")
 
+/** @typedef { import("./index") } BrowserExtension */
+
+/**
+ * @typedef {Object} InterfaceCli
+ * @property {number=} crxVersion
+ * @property {boolean} force
+ * @property {string} privateKey
+ * @property {string=} output
+ * @property {string=} zipOutput
+ * @property {number=} maxBuffer
+ */
+
 program
   .command("keygen [directory]")
   .option("--force", "overwrite the private key if it exists")
@@ -53,18 +65,20 @@ program
   )
   .action(pack);
 
+/** @type {InterfaceCli} */
 program.parse(process.argv);
 
 
 /**
  * Generate a new key file
  * @param {String} keyPath path of the key file to create
- * @param {Object} opts
- * @returns {Promise}
+ * @param {InterfaceCli} opts
+ * @returns {Promise<void>}
  */
 function generateKeyFile(keyPath, opts) {
   // Chromium (tested on 72.0.3626.109) which generates CRX v3 files requires pkcs8 key
-  var pkcs = "pkcs" + (opts.crxVersion === 2 ? "1" : "8") + "-private-pem";
+  /** @type {rsa.FormatPem} */
+  var pkcs = opts.crxVersion === 2 ? "pkcs1-private-pem" : "pkcs8-private-pem";
 
   return Promise.resolve(new rsa({ b: 2048 }))
     .then(key => key.exportKey(pkcs))
@@ -72,42 +86,52 @@ function generateKeyFile(keyPath, opts) {
   ;
 }
 
-function keygen(dir, program) {
+/**
+ * Generates a Private Key
+ *
+ * @param {string} dir
+ * @param {InterfaceCli} opts
+ */
+function keygen(dir, opts) {
   dir = dir ? resolve(cwd, dir) : cwd;
 
   var keyPath = join(dir, "key.pem");
 
   fs.exists(keyPath, function(exists) {
-    if (exists && !program.force) {
+    if (exists && !opts.force) {
       throw new Error("key.pem already exists in the given location.");
     }
 
-    generateKeyFile(keyPath, program);
+    generateKeyFile(keyPath, opts);
   });
 }
 
-function pack(dir, program) {
+/**
+ * @param {string} dir
+ * @param {InterfaceCli} opts
+ */
+function pack(dir, opts) {
   var input = dir ? resolve(cwd, dir) : cwd;
-  var keyPath = program.privateKey
-    ? resolve(cwd, program.privateKey)
+  var keyPath = opts.privateKey
+    ? resolve(cwd, opts.privateKey)
     : join(input, "..", "key.pem");
   var output;
 
-  if (program.output) {
-    if (path.extname(program.output) !== ".crx") {
+  if (opts.output) {
+    if (path.extname(opts.output) !== ".crx") {
       throw new Error(
         "-o file is expected to have a `.crx` suffix: [" +
-          program.output +
+          opts.output +
           "] was given."
       );
     }
   }
 
-  if (program.zipOutput) {
-    if (path.extname(program.zipOutput) !== ".zip") {
+  if (opts.zipOutput) {
+    if (path.extname(opts.zipOutput) !== ".zip") {
       throw new Error(
         "--zip-output file is expected to have a `.zip` suffix: [" +
-          program.zipOutput +
+          opts.zipOutput +
           "] was given."
       );
     }
@@ -115,15 +139,15 @@ function pack(dir, program) {
 
   var crx = new ChromeExtension({
     rootDirectory: input,
-    maxBuffer: program.maxBuffer,
-    version: program.crxVersion || 3
+    maxBuffer: opts.maxBuffer,
+    version: opts.crxVersion || 3
   });
 
   readFile(keyPath)
     .then(null, function(err) {
       // If the key file doesn't exist, create one
       if (err.code === "ENOENT") {
-        return generateKeyFile(keyPath, program).then(() => {
+        return generateKeyFile(keyPath, opts).then(() => {
           process.stderr.write("Created new private key at: " + keyPath + ".\n");
           return readFile(keyPath);
         });
@@ -139,8 +163,8 @@ function pack(dir, program) {
         .load()
         .then(() => crx.loadContents())
         .then(function(fileBuffer) {
-          if (program.zipOutput) {
-            var outFile = resolve(cwd, program.zipOutput);
+          if (opts.zipOutput) {
+            var outFile = resolve(cwd, opts.zipOutput);
 
             fs.createWriteStream(outFile).end(fileBuffer);
           }
@@ -149,11 +173,11 @@ function pack(dir, program) {
           }
         })
         .then(function(crxBuffer) {
-          if (program.zipOutput) {
+          if (opts.zipOutput) {
             return;
           }
-          else if (program.output) {
-            output = program.output;
+          else if (opts.output) {
+            output = opts.output;
           }
           else {
             output = path.basename(cwd) + ".crx";
