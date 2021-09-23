@@ -18,6 +18,7 @@ jobs:
             allow-failure: true
           - node-version: 14.x
             os: windows-latest
+            allow-failure: true
 
     steps:
     - uses: actions/checkout@v2
