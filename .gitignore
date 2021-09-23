@@ -5,6 +5,7 @@ node_modules
 coverage
 .nyc_output
 tmp
+dist
 
 build.crx
 update.xml

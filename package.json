@@ -5,6 +5,7 @@
   "version": "5.0.1",
   "license": "MIT",
   "homepage": "https://github.com/oncletom/crx",
+  "typings": "./types.d.ts",
   "repository": {
     "type": "git",
     "url": "git://github.com/oncletom/crx.git"
@@ -17,12 +18,14 @@
     "node": ">=10"
   },
   "scripts": {
+    "build:types": "tsc --declaration --emitDeclarationOnly --outFile types.d.ts",
     "test": "nyc tape ./test/*.js",
     "posttest": "eslint src/*.js",
     "version": "npm run changelog && git add CHANGELOG.md",
     "changelog": "github-changes -o oncletom -r crx -n ${npm_package_version}  --only-pulls --use-commit-body"
   },
   "nyc": {
+    "exclude": ["src/crx3.pb.js"],
     "functions": 100,
     "statements": 100,
     "branches": 100,
@@ -39,10 +42,16 @@
     "pbf": "^3.2.0"
   },
   "devDependencies": {
+    "@types/archiver": "^5.1.1",
+    "@types/node-rsa": "^1.1.1",
+    "@types/pbf": "^3.0.2",
+    "@typescript-eslint/eslint-plugin": "^4.31.2",
+    "@typescript-eslint/parser": "^4.31.2",
     "adm-zip": "^0.4.13",
-    "eslint": "^5.16.0",
+    "eslint": "^7.32.0",
     "github-changes": "^2.0.0",
     "nyc": "^14.1.1",
-    "tape": "^4.11.0"
+    "tape": "^4.11.0",
+    "typescript": "^4.4.3"
   }
 }
